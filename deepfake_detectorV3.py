@@ -1,4 +1,11 @@
 
+def _get_asset_b64(path):
+    try:
+        with open(path, 'rb') as f:
+            return base64.b64encode(f.read()).decode()
+    except Exception:
+        return ''
+
 def _get_audio_b64():
     try:
         with open('netflix_ta_dum.mp3', 'rb') as f:
@@ -615,364 +622,133 @@ st.markdown(r"""
 </style>
 """, unsafe_allow_html=True)
 
-if "_splash_shown" not in st.session_state:
-    st.session_state["_splash_shown"] = True
+if "entered" not in st.session_state:
+    st.session_state.entered = False
 
+if not st.session_state.entered:
+    st.markdown("""
+    <style>
+    /* Hide default Streamlit elements to make it fully immersive */
+    [data-testid="stSidebar"] { display: none !important; }
+    header { display: none !important; }
+    .stApp { background-color: #000 !important; }
+    
+    /* Original Splash Screen Visuals */
+    .splash-container {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: black;
+        z-index: 999998;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .splash-logo {
+        color: #e50914;
+        font-size: 4rem;
+        font-weight: bold;
+        font-family: 'Bebas Neue', sans-serif;
+        letter-spacing: 4px;
+    }
+    .splash-prompt {
+        color: white;
+        margin-top: 2rem;
+        font-size: 1.5rem;
+        animation: pulse 1.5s infinite;
+        font-family: 'Inter', sans-serif;
+    }
+    @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+    
+    /* Invisible Full Screen Button */
+    div.stButton > button {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 999999 !important;
+        opacity: 0 !important;
+        cursor: pointer !important;
+    }
+    </style>
+    <div class="splash-container">
+        <div class="splash-logo">MULTIMEDIA AUTHENTICITY LAB</div>
+        <div class="splash-prompt">CLICK ANYWHERE TO ENTER</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("invisible_enter_button"):
+        st.session_state.entered = True
+        st.rerun()
+    st.stop()
 
-    components.html(
-        """
-        <script>
-            const parentDoc = window.parent.document;
-            
-            // Create splash container in parent doc
-            const splash = parentDoc.createElement('div');
-            splash.id = 'netflix-splash';
-            splash.innerHTML = `
-                <style>
-                @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
-                #netflix-splash {
-                    position: fixed;
-                    top: 0; left: 0; width: 100vw; height: 100vh;
-                    background: #000000;
-                    z-index: 9999999;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: opacity 0.4s ease-in;
-                }
-                #netflix-splash-logo {
-                    font-family: 'Bebas Neue', cursive;
-                    font-size: 8rem;
-                    color: #ffffff;
-                    letter-spacing: 5px;
-                    opacity: 0;
-                    transform: scale(1.0);
-                    transition: all 0.6s ease-out;
-                }
-                .red-letter { color: #E50914; }
-                </style>
-                <div id="netflix-splash-logo"><span class="red-letter">D</span>EEPFAKE</div>
-            `;
-            
-            if (!parentDoc.getElementById('netflix-splash')) {
-                parentDoc.body.appendChild(splash);
-                
-                const logo = parentDoc.getElementById('netflix-splash-logo');
-                
-                setTimeout(() => {
-                    logo.style.opacity = '1';
-                    logo.style.transform = 'scale(1.15)';
-                    
-                    setTimeout(() => {
-                        logo.style.transition = 'all 0.3s ease-in';
-                        logo.style.opacity = '0';
-                        logo.style.transform = 'scale(1.20)';
-                        
-                        setTimeout(() => {
-                            splash.style.opacity = '0';
-                            setTimeout(() => {
-                                splash.remove();
-                            }, 400);
-                        }, 300 + 150); // wait for fade out plus 150ms pure black flash
-                    }, 600);
-                }, 400);
-            }
-        </script>
-        """,
-        height=0,
-        width=0,
-    )
+# Post-enter animation & Audio & Nav Bar
+audio_b64 = _get_audio_b64()
+audio_html = f'<audio autoplay><source src="data:audio/mp3;base64,{audio_b64}" type="audio/mp3"></audio>' if audio_b64 else ""
 
-# ═══════════════════════════════════════════════════════════════════════
-# TOP NAVIGATION BAR (Netflix Style)
-# ═══════════════════════════════════════════════════════════════════════
-components.html(
-    """
-    <script>
-        const parentDoc = window.parent.document;
-        if (!parentDoc.getElementById('netflix-nav-styles')) {
-            const style = parentDoc.createElement('style');
-            style.id = 'netflix-nav-styles';
-            style.innerHTML = `
+st.markdown(audio_html + """
+<style>
+/* Zoom animation */
+.zoom-container {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: black;
+    z-index: 999998;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: fadeOut 0.5s forwards 2.5s;
+    pointer-events: none;
+}
+.zoom-logo {
+    color: #e50914;
+    font-size: 4rem;
+    font-weight: bold;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 4px;
+    animation: zoom 2s forwards;
+}
+@keyframes zoom { 0% { transform: scale(1); } 100% { transform: scale(1.5); opacity: 0; } }
+@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
 
-                
-                
-                /* Splash Screen Styles */
-                #netflix-splash {
-                    position: fixed;
-                    top: 0; left: 0;
-                    width: 100vw; height: 100vh;
-                    background-color: #000000;
-                    z-index: 99999999;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    overflow: hidden;
-                    cursor: pointer;
-                    user-select: none;
-                }
-                #splash-content {
-                    text-align: center;
-                }
-                #splash-logo {
-                    font-family: 'Bebas Neue', cursive, sans-serif;
-                    font-size: 6vw;
-                    color: #ffffff;
-                    letter-spacing: 4px;
-                    opacity: 1;
-                }
-                #splash-logo .red-letter { color: #E50914; }
-                #splash-logo.animate-zoom {
-                    animation: zoomLogo 3.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-                }
-                #splash-prompt {
-                    color: #666666;
-                    font-family: 'Inter', sans-serif;
-                    font-size: 13px;
-                    letter-spacing: 2px;
-                    margin-top: 25px;
-                    text-transform: uppercase;
-                    animation: pulsePrompt 1.5s infinite alternate;
-                }
-                @keyframes pulsePrompt {
-                    from { opacity: 0.4; }
-                    to { opacity: 1; }
-                }
-                @keyframes zoomLogo {
-                    0% { opacity: 0; transform: scale(0.8); }
-                    15% { opacity: 1; transform: scale(1); }
-                    75% { opacity: 1; transform: scale(1.08); }
-                    100% { opacity: 0; transform: scale(3.2); }
-                }
-                @keyframes fadeOutSplash {
-                    to { opacity: 0; visibility: hidden; }
-                }
+/* Nav Bar Styles */
+#css-netflix-nav {
+    position: fixed;
+    top: 0; left: 0; width: 100%;
+    height: 70px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4%;
+    z-index: 1000;
+    pointer-events: none;
+}
+.nav-left { display: flex; align-items: center; gap: 40px; }
+.nav-logo { color: #e50914; font-size: 1.8rem; font-weight: bold; font-family: 'Bebas Neue', sans-serif; cursor: pointer; pointer-events: auto; }
+.nav-logo .red-letter { color: #e50914; }
+.nav-right { display: flex; align-items: center; gap: 20px; pointer-events: auto; }
+.nav-icon { width: 24px; height: 24px; fill: #fff; cursor: pointer; }
+.profile-avatar { width: 32px; height: 32px; background: #e50914; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer; }
+</style>
 
-                /* Hide streamlit default header */
-                header[data-testid="stHeader"] {
-                    display: none !important;
-                }
-                .stApp > header {
-                    display: none !important; 
-                }
-                
-                /* Custom Nav Bar Styles */
-                #netflix-nav {
-                    position: fixed;
-                    top: 0; left: 0; width: 100vw; height: 68px;
-                    z-index: 9999990;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    padding: 0 4%;
-                    background: linear-gradient(180deg, rgba(0,0,0,0.7) 10%, transparent 100%);
-                    transition: background-color 0.4s ease, box-shadow 0.4s ease;
-                    box-sizing: border-box;
-                    font-family: 'Inter', sans-serif;
-                }
-                #netflix-nav.scrolled {
-                    background: #141414;
-                    box-shadow: 0 2px 12px rgba(0,0,0,0.5);
-                }
-                .nav-left, .nav-right {
-                    display: flex;
-                    align-items: center;
-                    gap: 20px;
-                }
-                .nav-logo {
-                    font-family: 'Bebas Neue', cursive;
-                    font-size: 25px;
-                    color: #ffffff;
-                    letter-spacing: 2px;
-                    margin-right: 15px;
-                    cursor: pointer;
-                }
-                .nav-logo .red-letter { color: #E50914; }
-                .nav-links {
-                    display: flex;
-                    gap: 18px;
-                }
-                .nav-link {
-                    color: #e5e5e5;
-                    font-size: 14px;
-                    font-weight: 500;
-                    text-decoration: none;
-                    cursor: pointer;
-                    transition: color 0.2s;
-                }
-                .nav-link:hover {
-                    color: #b3b3b3;
-                }
-                .nav-link.active {
-                    font-weight: 700;
-                    color: #ffffff;
-                }
-                .nav-icon {
-                    width: 20px; height: 20px;
-                    fill: #e5e5e5;
-                    cursor: pointer;
-                    transition: fill 0.2s;
-                }
-                .nav-icon:hover {
-                    fill: #ffffff;
-                }
-                .profile-avatar {
-                    width: 32px; height: 32px;
-                    border-radius: 50%;
-                    background-color: #E50914;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-weight: bold;
-                    font-size: 14px;
-                    cursor: pointer;
-                }
-            `;
-            parentDoc.head.appendChild(style);
+<div class="zoom-container">
+    <div class="zoom-logo">MULTIMEDIA AUTHENTICITY LAB</div>
+</div>
 
-            
-            // Add Splash Screen HTML
-            const splash = parentDoc.createElement('div');
-            splash.id = 'netflix-splash';
-            splash.innerHTML = `
-                <div id="splash-content">
-                    <div id="splash-logo"><span class="red-letter">M</span>ULTIMEDIA AUTHENTICITY LAB</div>
-                    <div id="splash-prompt">Click anywhere to enter</div>
-                </div>
-            `;
-            parentDoc.body.appendChild(splash);
-
-            // Add Audio Element
-            const audio = parentDoc.createElement('audio');
-            audio.id = 'netflix-audio';
-            audio.preload = 'auto';
-            audio.src = 'data:audio/mp3;base64,' + _get_audio_b64();
-            parentDoc.body.appendChild(audio);
-
-            let hasStarted = false;
-
-            function startIntro() {
-                if (hasStarted) return;
-                hasStarted = true;
-
-                // Play audio
-                audio.play().catch(e => console.log('Audio playback blocked:', e));
-
-                // Animate logo
-                const logo = splash.querySelector('#splash-logo');
-                const prompt = splash.querySelector('#splash-prompt');
-                if (prompt) prompt.style.display = 'none';
-                if (logo) logo.classList.add('animate-zoom');
-
-                // Fade out & clean up
-                setTimeout(() => {
-                    splash.style.animation = 'fadeOutSplash 0.5s ease-in forwards';
-                    setTimeout(() => {
-                        if (splash.parentNode) splash.parentNode.removeChild(splash);
-                        if (audio.parentNode) audio.parentNode.removeChild(audio);
-                    }, 500);
-                }, 3200);
-            }
-
-            // 1. Try immediate play
-            audio.play().then(() => {
-                startIntro();
-            }).catch(() => {
-                // Autoplay blocked by browser policy; wait for click
-                console.log('Autoplay blocked. Click required to play sound.');
-            });
-
-            // 2. User click/tap/keypress handler to ensure audio plays
-            const handleInteraction = () => {
-                startIntro();
-                parentDoc.removeEventListener('click', handleInteraction);
-                parentDoc.removeEventListener('pointerdown', handleInteraction);
-                parentDoc.removeEventListener('keydown', handleInteraction);
-            };
-
-            parentDoc.addEventListener('click', handleInteraction);
-            parentDoc.addEventListener('pointerdown', handleInteraction);
-            parentDoc.addEventListener('keydown', handleInteraction);
-
-            const nav = parentDoc.createElement('div');
-            nav.id = 'netflix-nav';
-            nav.innerHTML = `
-                <div class="nav-left">
-                    <div class="nav-logo" onclick="clickTab(0)"><span class="red-letter">D</span>EEPFAKE</div>
-                    <div class="nav-links">
-                        <!-- Navigation relies on native Streamlit tabs -->
-                    </div>
-                </div>
-                <div class="nav-right">
-                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
-                    <div class="profile-avatar">S</div>
-                </div>
-            `;
-            parentDoc.body.appendChild(nav);
-            
-            // Scroll listener
-            const addScrollListener = () => {
-                const scrollContainers = parentDoc.querySelectorAll('.stApp, .stMain, [data-testid="stAppViewContainer"], [data-testid="stMain"]');
-                scrollContainers.forEach(container => {
-                    container.addEventListener('scroll', (e) => {
-                        if (e.target.scrollTop > 50) {
-                            nav.classList.add('scrolled');
-                        } else {
-                            nav.classList.remove('scrolled');
-                        }
-                    });
-                });
-                parentDoc.defaultView.addEventListener('scroll', (e) => {
-                    if (parentDoc.defaultView.scrollY > 50) {
-                        nav.classList.add('scrolled');
-                    } else {
-                        nav.classList.remove('scrolled');
-                    }
-                });
-            };
-            // Run it now and also after a short delay in case DOM elements load late
-            addScrollListener();
-            setTimeout(addScrollListener, 1000);
-            
-            // Click handler globally attached to parent window
-            window.parent.clickTab = function(index, el) {
-                // Find all native Streamlit tab buttons by role or data attributes
-                let tabs = parentDoc.querySelectorAll('button[role="tab"], button[data-baseweb="tab"]');
-                if (tabs && tabs.length > index) {
-                    tabs[index].click();
-                } else {
-                    // Fallback to checking by id prefix
-                    let allButtons = parentDoc.querySelectorAll('button');
-                    let tabButtons = [];
-                    allButtons.forEach(b => {
-                        if (b.id && b.id.startsWith('tabs-bui')) {
-                            tabButtons.push(b);
-                        }
-                    });
-                    if (tabButtons.length > index) {
-                        tabButtons[index].click();
-                    }
-                }
-                
-                if (el) {
-                    parentDoc.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-                    el.classList.add('active');
-                } else {
-                    parentDoc.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-                    if (parentDoc.querySelectorAll('.nav-link').length > 0) {
-                        parentDoc.querySelectorAll('.nav-link')[0].classList.add('active');
-                    }
-                }
-            };
-        }
-    </script>
-    """,
-    height=0,
-    width=0,
-)
-
+<div id="css-netflix-nav">
+    <div class="nav-left">
+        <div class="nav-logo"><span class="red-letter">D</span>EEPFAKE</div>
+    </div>
+    <div class="nav-right">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+        <div class="profile-avatar">S</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 # ═══════════════════════════════════════════════════════════════════════
 # CUSTOM CSS
 # ═══════════════════════════════════════════════════════════════════════
@@ -2857,17 +2633,17 @@ with st.sidebar:
 # ═══════════════════════════════════════════════════════════════════════
 
 THUMBNAILS = {
-    "prithivMLmods/Deepfake-Detection-Exp-02-21": "data:image/png;base64,' + _get_asset_b64('assets/asset_1.png') + '",
-    "AdityaManojShinde/deepfake-detector": "data:image/png;base64,' + _get_asset_b64('assets/asset_2.png') + '",
-    "dima806/deepfake_vs_real_image_detection": "data:image/png;base64,' + _get_asset_b64('assets/asset_3.png') + '",
-    "prithivMLmods/Deep-Fake-Detector-Model": "data:image/png;base64,' + _get_asset_b64('assets/asset_4.png') + '",
-    "Wvolf/ViT_Deepfake_Detection": "data:image/png;base64,' + _get_asset_b64('assets/asset_5.png') + '",
-    "fc63/deepfake-detection-cnn_v2": "data:image/png;base64,' + _get_asset_b64('assets/asset_6.png') + '",
-    "MaanVad3r/DeepFake-Detector": "data:image/png;base64,' + _get_asset_b64('assets/asset_7.png') + '",
-    "dataflow/redeepfake": "data:image/png;base64,' + _get_asset_b64('assets/asset_8.png') + '",
-    "Purnachander-Konda/deepfake-detection-swin": "data:image/png;base64,' + _get_asset_b64('assets/asset_9.png') + '",
-    "computervisionpro/convnextv2-real-fake": "data:image/png;base64,' + _get_asset_b64('assets/asset_10.png') + '",
-    "umm-maybe/AI-image-detector": "data:image/png;base64,' + _get_asset_b64('assets/asset_11.png') + '",
+    "prithivMLmods/Deepfake-Detection-Exp-02-21": f"data:image/png;base64,{_get_asset_b64('assets/asset_1.png')}",
+    "AdityaManojShinde/deepfake-detector": f"data:image/png;base64,{_get_asset_b64('assets/asset_2.png')}",
+    "dima806/deepfake_vs_real_image_detection": f"data:image/png;base64,{_get_asset_b64('assets/asset_3.png')}",
+    "prithivMLmods/Deep-Fake-Detector-Model": f"data:image/png;base64,{_get_asset_b64('assets/asset_4.png')}",
+    "Wvolf/ViT_Deepfake_Detection": f"data:image/png;base64,{_get_asset_b64('assets/asset_5.png')}",
+    "fc63/deepfake-detection-cnn_v2": f"data:image/png;base64,{_get_asset_b64('assets/asset_6.png')}",
+    "MaanVad3r/DeepFake-Detector": f"data:image/png;base64,{_get_asset_b64('assets/asset_7.png')}",
+    "dataflow/redeepfake": f"data:image/png;base64,{_get_asset_b64('assets/asset_8.png')}",
+    "Purnachander-Konda/deepfake-detection-swin": f"data:image/png;base64,{_get_asset_b64('assets/asset_9.png')}",
+    "computervisionpro/convnextv2-real-fake": f"data:image/png;base64,{_get_asset_b64('assets/asset_10.png')}",
+    "umm-maybe/AI-image-detector": f"data:image/png;base64,{_get_asset_b64('assets/asset_11.png')}",
 }
 
 _model_data = []
