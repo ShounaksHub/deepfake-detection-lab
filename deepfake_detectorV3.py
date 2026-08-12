@@ -2100,6 +2100,7 @@ def render_analysis_card(col, model_name, results, accuracy=""):
     """
 
     with col:
+        html = "".join(line.strip() for line in html.splitlines())
         st.markdown(html, unsafe_allow_html=True)
 
 
@@ -3004,6 +3005,7 @@ with tab_image:
                     </div>
                 </div>
                 """
+            card_html = "".join(line.strip() for line in card_html.splitlines())
             st.markdown(card_html, unsafe_allow_html=True)
 
             analyze_btn = st.button(
@@ -3619,6 +3621,7 @@ with tab_image:
                     """
 
                 grid_html += "</div>"
+                grid_html = "".join(line.strip() for line in grid_html.splitlines())
                 st.markdown(grid_html, unsafe_allow_html=True)
 
     else:
@@ -3827,6 +3830,7 @@ with tab_video:
                         </div>
                     </div>
                     '''
+                    html = "".join(line.strip() for line in html.splitlines())
                     st.markdown(html, unsafe_allow_html=True)
 
                     # ── Timeline chart ─────────────────────────────────
