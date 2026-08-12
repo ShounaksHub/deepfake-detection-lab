@@ -1,3 +1,14 @@
+---
+title: Multimedia Authenticity Lab
+emoji: 🎬
+colorFrom: blue
+colorTo: purple
+sdk: streamlit
+sdk_version: 1.30.0
+app_file: deepfake_detectorV3.py
+pinned: false
+---
+
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/Streamlit-1.30+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit">
