@@ -1,0 +1,41 @@
+# ── Secrets & credentials ──────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Streamlit secrets ──────────────────────────────────
+.streamlit/secrets.toml
+secrets.toml
+
+# ── Python ────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ───────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── Model cache / downloads ───────────────────────────
+*.pth
+*.h5
+*.keras
+*.onnx
+
+# ── OS artifacts ──────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── Database (local history) ──────────────────────────
+*.db
+*.sqlite3
