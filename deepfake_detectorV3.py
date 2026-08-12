@@ -3958,7 +3958,7 @@ with tab_audio:
         if val_err:
             st.toast(f"⚠️ {val_err}", icon="⚠️")
             st.stop()
-        safe_aud_filename = _sanitize_filename(safe_aud_filename)
+        safe_aud_filename = _sanitize_filename(audio_file.name)
         audio_file.seek(0)
         st.audio(audio_bytes, format=f"audio/{audio_file.name.split('.')[-1]}")
         st.caption(f"📁 {audio_file.name}  •  {len(audio_bytes) / 1024:.1f} KB")
