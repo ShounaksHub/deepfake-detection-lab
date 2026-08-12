@@ -4558,7 +4558,7 @@ st.markdown(
 /* Hide default Streamlit footer and main menu */
 footer {visibility: hidden;}
 #MainMenu {visibility: hidden;}
-header {visibility: hidden;}
+/* header {visibility: hidden;} */
 </style>
 
 <div style='text-align:center;padding:1.5rem 0 0.5rem;'>
