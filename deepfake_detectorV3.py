@@ -2625,14 +2625,21 @@ _model_data_json = json.dumps(_model_data)
 
 _cards_html = ""
 _modals_html = ""
-for idx, (m_id, m) in enumerate(_MODELS.items()):
-    bg_img = m.get("bg", "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop")
+for idx, (name, cfg) in enumerate(MODEL_REGISTRY.items()):
+    short = name.split("-")[1].strip() if "-" in name else name
+    thumb_b64 = THUMBNAILS.get(cfg["model_id"], THUMBNAILS["prithivMLmods/Deepfake-Detection-Exp-02-21"])
+    bg_img = thumb_b64
+    desc = cfg["description"]
+    m_id = f"m{idx}"
+    acc = cfg.get("accuracy", "90%")
+    arch = cfg.get("arch", "Unknown")
+    
     _cards_html += f"""
         <div class="netflix-card" onclick="document.getElementById('modal-{m_id}').style.display='flex';">
-            <img src="{bg_img}" alt="{m['name']}">
+            <img src="{bg_img}" alt="{short}">
             <div class="card-info">
-                <div class="card-title">{m["name"]}</div>
-                <div class="card-desc">{m["desc"][:90]}...</div>
+                <div class="card-title">{short}</div>
+                <div class="card-desc">{desc[:90]}...</div>
             </div>
         </div>
     """
@@ -2644,7 +2651,7 @@ for idx, (m_id, m) in enumerate(_MODELS.items()):
                 <div class="modal-banner-gradient"></div>
             </div>
             <div class="modal-content-wrapper">
-                <div class="modal-title">{m['name']}</div>
+                <div class="modal-title">{short}</div>
                 <div class="modal-actions">
                     <button class="modal-play-btn" onclick="document.getElementById('modal-{m_id}').style.display='none'; const fileInput = document.querySelector('input[type=file]'); if(fileInput) fileInput.click(); else alert('Please upload a file in the main UI.');">
                         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Analyze
@@ -2653,14 +2660,14 @@ for idx, (m_id, m) in enumerate(_MODELS.items()):
                 <div class="modal-body-grid">
                     <div>
                         <div class="modal-meta-row">
-                            <span class="modal-match">98% Match</span>
+                            <span class="modal-match">{acc} Match</span>
                             <span class="modal-year">2026</span>
                             <span class="modal-hd">HD</span>
                         </div>
-                        <div class="modal-desc">{m['desc']}</div>
+                        <div class="modal-desc">{desc}</div>
                     </div>
                     <div class="modal-right-col">
-                        <div><span>Architecture:</span> <strong>{m.get('params', 'Unknown')} Params, {m.get('layers', 'N/A')} Layers</strong></div>
+                        <div><span>Architecture:</span> <strong>{arch}</strong></div>
                     </div>
                 </div>
             </div>
