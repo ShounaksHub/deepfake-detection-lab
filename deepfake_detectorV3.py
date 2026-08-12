@@ -2636,7 +2636,7 @@ for idx, (name, cfg) in enumerate(MODEL_REGISTRY.items()):
     arch = cfg.get("arch", "Unknown")
     
     _cards_html += f"""
-        <div class="netflix-card" onclick="document.getElementById('modal-{m_id}').style.display='flex';">
+        <div class="netflix-card" onclick="window.openModal('modal-{m_id}')">
             <img src="{bg_img}" alt="{short}">
             <div class="card-info">
                 <div class="card-title">{short}</div>
@@ -2762,10 +2762,38 @@ html_str = f"""
             <button class="row-arrow right-arrow" onclick="document.querySelector('.row-cards').scrollBy({{left: 600, behavior: 'smooth'}})">&#10095;</button>
         </div>
     </div>
-    {_modals_html}
+    
+    <template id="netflix-modals">
+        {_modals_html}
+    </template>
+
+    <script>
+    const parentDoc = window.parent.document;
+    
+    // Ensure styles are propagated to the main app DOM
+    if (!parentDoc.getElementById('netflix-injected-styles')) {{
+        const styleNode = parentDoc.createElement('style');
+        styleNode.id = 'netflix-injected-styles';
+        styleNode.innerHTML = document.querySelector('style').innerHTML;
+        parentDoc.head.appendChild(styleNode);
+    }}
+    
+    // Inject the modals into the main app DOM
+    if (!parentDoc.getElementById('netflix-injected-modals')) {{
+        const modalsContainer = parentDoc.createElement('div');
+        modalsContainer.id = 'netflix-injected-modals';
+        modalsContainer.innerHTML = document.getElementById('netflix-modals').innerHTML;
+        parentDoc.body.appendChild(modalsContainer);
+    }}
+    
+    // Function exposed to cards
+    window.openModal = function(id) {{
+        const m = parentDoc.getElementById(id);
+        if (m) m.style.display = 'flex';
+    }};
+    </script>
     """
-html_str = "".join(line.strip() for line in html_str.splitlines())
-st.markdown(html_str, unsafe_allow_html=True)
+components.html(html_str, height=350)
 
 
 
