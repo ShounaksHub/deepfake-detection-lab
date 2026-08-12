@@ -2764,13 +2764,13 @@ html_str = f"""
     </div>
     {_modals_html}
     """
-html_str = "\n".join(line.lstrip() for line in html_str.splitlines())
+html_str = "".join(line.strip() for line in html_str.splitlines())
 st.markdown(html_str, unsafe_allow_html=True)
 
 
 
 tab_image, tab_video, tab_audio, tab_url, tab_history = st.tabs(
-    ["??? Image", "?? Video", "?? Audio", "?? URL Scanner", "?? History"]
+    ["🖼️ Image", "🎬 Video", "🎵 Audio", "🔗 URL Scanner", "📊 History"]
 )
 
 with tab_image:
