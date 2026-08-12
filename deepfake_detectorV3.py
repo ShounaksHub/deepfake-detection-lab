@@ -621,55 +621,55 @@ if "entered" not in st.session_state:
 
 if not st.session_state.entered:
     st.markdown('''
-    <style>
-    /* Hide default Streamlit elements */
-    [data-testid="stSidebar"] { display: none !important; }
-    header { display: none !important; }
-    .stApp { background-color: #000 !important; }
-    
-    .splash-container {
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: black;
-        z-index: 999998;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    .splash-logo {
-        color: #e50914;
-        font-size: 4rem;
-        font-weight: bold;
-        font-family: 'Bebas Neue', sans-serif;
-        letter-spacing: 4px;
-    }
-    .splash-prompt {
-        color: white;
-        margin-top: 2rem;
-        font-size: 1.5rem;
-        animation: pulse 1.5s infinite;
-        font-family: 'Inter', sans-serif;
-    }
-    @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-    
-    /* Invisible Full Screen Button */
-    div.stButton > button {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        z-index: 999999 !important;
-        opacity: 0 !important;
-        cursor: pointer !important;
-    }
-    </style>
-    <div class="splash-container">
-        <div class="splash-logo">MULTIMEDIA AUTHENTICITY LAB</div>
-        <div class="splash-prompt">CLICK ANYWHERE TO ENTER</div>
-    </div>
-    ''', unsafe_allow_html=True)
+<style>
+/* Hide default Streamlit elements */
+[data-testid="stSidebar"] { display: none !important; }
+header { display: none !important; }
+.stApp { background-color: #000 !important; }
+
+.splash-container {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: black;
+    z-index: 999998;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.splash-logo {
+    color: #e50914;
+    font-size: 4rem;
+    font-weight: bold;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 4px;
+}
+.splash-prompt {
+    color: white;
+    margin-top: 2rem;
+    font-size: 1.5rem;
+    animation: pulse 1.5s infinite;
+    font-family: 'Inter', sans-serif;
+}
+@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+/* Invisible Full Screen Button */
+div.stButton > button {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 999999 !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+}
+</style>
+<div class="splash-container">
+    <div class="splash-logo">MULTIMEDIA AUTHENTICITY LAB</div>
+    <div class="splash-prompt">CLICK ANYWHERE TO ENTER</div>
+</div>
+''', unsafe_allow_html=True)
     
     if st.button("invisible_enter_button"):
         st.session_state.entered = True
@@ -679,71 +679,31 @@ else:
     audio_html = f'<audio autoplay><source src="data:audio/mp3;base64,{audio_b64}" type="audio/mp3"></audio>' if audio_b64 else ""
     
     st.markdown(audio_html + '''
-    <style>
-    .zoom-container {
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: black;
-        z-index: 999998;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        animation: fadeOutSplash 0.5s forwards 2.8s;
-        pointer-events: none;
-    }
-    .zoom-logo {
-        color: #e50914;
-        font-size: 4rem;
-        font-weight: bold;
-        font-family: 'Bebas Neue', sans-serif;
-        letter-spacing: 4px;
-        animation: netflixZoom 3s forwards cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-    /* True Netflix Zoom */
-    @keyframes netflixZoom { 
-        0% { transform: scale(1); opacity: 0; }
-        10% { transform: scale(0.9); opacity: 1; } 
-        100% { transform: scale(5); opacity: 0; } 
-    }
-    @keyframes fadeOutSplash { to { opacity: 0; visibility: hidden; display: none; } }
-
-    /* Nav Bar Styles */
-    #css-netflix-nav {
-        position: fixed;
-        top: 0; left: 0; width: 100%;
-        height: 70px;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 4%;
-        z-index: 1000;
-        pointer-events: none;
-    }
-    .nav-left { display: flex; align-items: center; gap: 40px; }
-    .nav-logo { color: #e50914; font-size: 1.8rem; font-weight: bold; font-family: 'Bebas Neue', sans-serif; cursor: pointer; pointer-events: auto; }
-    .nav-logo .red-letter { color: #e50914; }
-    .nav-right { display: flex; align-items: center; gap: 20px; pointer-events: auto; }
-    .nav-icon { width: 24px; height: 24px; fill: #fff; cursor: pointer; }
-    .profile-avatar { width: 32px; height: 32px; background: #e50914; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer; }
-    </style>
-
-    <div class="zoom-container">
-        <div class="zoom-logo">MULTIMEDIA AUTHENTICITY LAB</div>
-    </div>
-
-    <div id="css-netflix-nav">
-        <div class="nav-left">
-            <div class="nav-logo"><span class="red-letter">D</span>EEPFAKE</div>
-        </div>
-        <div class="nav-right">
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
-            <div class="profile-avatar">S</div>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
+<div id="full-ui-container">
+<style>
+.zoom-container{position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;z-index:999998;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeOutSplash 0.5s forwards 2.8s;pointer-events:none;}
+.zoom-logo{color:#e50914;font-size:4rem;font-weight:bold;font-family:'Bebas Neue',sans-serif;letter-spacing:4px;animation:netflixZoom 3s forwards cubic-bezier(0.2,0.8,0.2,1);}
+@keyframes netflixZoom{0%{transform:scale(1);opacity:0;}10%{transform:scale(0.9);opacity:1;}100%{transform:scale(5);opacity:0;}}
+@keyframes fadeOutSplash{to{opacity:0;visibility:hidden;display:none;}}
+#css-netflix-nav{position:fixed;top:0;left:0;width:100%;height:70px;background:linear-gradient(to bottom,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0) 100%);display:flex;align-items:center;justify-content:space-between;padding:0 4%;z-index:1000;pointer-events:none;}
+.nav-left{display:flex;align-items:center;gap:40px;}
+.nav-logo{color:#e50914;font-size:1.8rem;font-weight:bold;font-family:'Bebas Neue',sans-serif;cursor:pointer;pointer-events:auto;}
+.nav-logo .red-letter{color:#e50914;}
+.nav-right{display:flex;align-items:center;gap:20px;pointer-events:auto;}
+.nav-icon{width:24px;height:24px;fill:#fff;cursor:pointer;}
+.profile-avatar{width:32px;height:32px;background:#e50914;border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;cursor:pointer;}
+</style>
+<div class="zoom-container"><div class="zoom-logo">MULTIMEDIA AUTHENTICITY LAB</div></div>
+<div id="css-netflix-nav">
+<div class="nav-left"><div class="nav-logo"><span class="red-letter">D</span>EEPFAKE</div></div>
+<div class="nav-right">
+<svg class="nav-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+<svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+<div class="profile-avatar">S</div>
+</div>
+</div>
+</div>
+''', unsafe_allow_html=True)
 
 
 
