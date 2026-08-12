@@ -680,8 +680,8 @@ else:
     st.markdown(audio_html + '''
 <div id="full-ui-container">
 <style>
-.zoom-container{position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;z-index:999998;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeOutSplash 0.5s forwards 2.8s;pointer-events:none;}
-.zoom-logo{color:#e50914;font-size:4rem;font-weight:bold;font-family:'Bebas Neue',sans-serif;letter-spacing:4px;animation:netflixZoom 3s forwards cubic-bezier(0.2,0.8,0.2,1);}
+.zoom-container{position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;z-index:999998;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeOutSplash 0.5s forwards 1.7s;pointer-events:none;}
+.zoom-logo{color:#e50914;font-size:4rem;font-weight:bold;font-family:'Bebas Neue',sans-serif;letter-spacing:4px;animation:netflixZoom 2s forwards cubic-bezier(0.2,0.8,0.2,1);}
 @keyframes netflixZoom{0%{transform:scale(1);opacity:0;}10%{transform:scale(0.9);opacity:1;}100%{transform:scale(5);opacity:0;}}
 @keyframes fadeOutSplash{to{opacity:0;visibility:hidden;display:none;}}
 #css-netflix-nav{position:fixed;top:0;left:0;width:100%;height:70px;background:linear-gradient(to bottom,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0) 100%);display:flex;align-items:center;justify-content:space-between;padding:0 4%;z-index:1000;pointer-events:none;}
