@@ -622,9 +622,7 @@ if "entered" not in st.session_state:
 if not st.session_state.entered:
     st.markdown('''
 <style>
-/* Hide default Streamlit elements */
-[data-testid="stSidebar"] { display: none !important; }
-header { display: none !important; }
+/* Hiding removed to fix sidebar bug */
 .stApp { background-color: #000 !important; }
 
 .splash-container {
