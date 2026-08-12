@@ -2624,1166 +2624,969 @@ for name, cfg in MODEL_REGISTRY.items():
 _model_data_json = json.dumps(_model_data)
 
 _cards_html = ""
-for i, m in enumerate(_model_data):
+_modals_html = ""
+for idx, (m_id, m) in enumerate(_MODELS.items()):
+    bg_img = m.get("bg", "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop")
     _cards_html += f"""
-            <div class="netflix-card" onclick="openModal('{i}')">
-                <div class="card-thumb" style="background-image: url('{m["thumb"]}');"></div>
-                <div class="card-label">{m["badge"]} {m["short"]}</div>
-                <div class="card-expand-content">
-                    <div class="card-title">{m["short"]}</div>
-                    <div class="card-badges">
-                        <span class="acc-badge">{m["acc"]}</span>
-                        <span class="arch-badge">{m["arch"]}</span>
+        <div class="netflix-card" onclick="document.getElementById('modal-{m_id}').style.display='flex';">
+            <img src="{bg_img}" alt="{m['name']}">
+            <div class="card-info">
+                <div class="card-title">{m["name"]}</div>
+                <div class="card-desc">{m["desc"][:90]}...</div>
+            </div>
+        </div>
+    """
+    _modals_html += f"""
+    <div id="modal-{m_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999999; background:rgba(0,0,0,0.8); justify-content:center; align-items:center;" onclick="this.style.display='none';">
+        <div class="netflix-modal-box" onclick="event.stopPropagation();">
+            <button class="modal-close-btn" onclick="document.getElementById('modal-{m_id}').style.display='none';">X</button>
+            <div class="modal-banner" style="background-image: url('{bg_img}');">
+                <div class="modal-banner-gradient"></div>
+            </div>
+            <div class="modal-content-wrapper">
+                <div class="modal-title">{m['name']}</div>
+                <div class="modal-actions">
+                    <button class="modal-play-btn" onclick="document.getElementById('modal-{m_id}').style.display='none'; const fileInput = document.querySelector('input[type=file]'); if(fileInput) fileInput.click(); else alert('Please upload a file in the main UI.');">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Analyze
+                    </button>
+                </div>
+                <div class="modal-body-grid">
+                    <div>
+                        <div class="modal-meta-row">
+                            <span class="modal-match">98% Match</span>
+                            <span class="modal-year">2026</span>
+                            <span class="modal-hd">HD</span>
+                        </div>
+                        <div class="modal-desc">{m['desc']}</div>
                     </div>
-                    <div class="card-desc">{m["desc"][:90]}...</div>
+                    <div class="modal-right-col">
+                        <div><span>Architecture:</span> <strong>{m.get('params', 'Unknown')} Params, {m.get('layers', 'N/A')} Layers</strong></div>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
     """
 
-components.html(
+st.markdown(
     f"""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
-body {{
-    margin: 0; padding: 0; background: transparent;
-    font-family: 'Inter', sans-serif;
-    overflow-x: hidden;
-}}
-
-/* ----- MICRO ANIMATIONS ----- */
-@keyframes pulseGlow {{
-    0% {{ box-shadow: 0 0 10px rgba(248,113,113,0.2); }}
-    50% {{ box-shadow: 0 0 30px rgba(248,113,113,0.6); }}
-    100% {{ box-shadow: 0 0 10px rgba(248,113,113,0.2); }}
-}}
-.animated-pulse-fake {{
-    animation: pulseGlow 2s infinite;
-}}
-
-/* ----- PHASE 4 CSS ----- */
-.netflix-row-container {{ margin-bottom: 2rem; padding-left: 4%; position: relative; }}
-.row-title {{ color: #fff; font-size: 20px; font-weight: 700; margin-bottom: -15px; cursor: pointer; display: flex; align-items: center; z-index: 10; position: relative; }}
-.row-chevron {{ color: #54b9c5; font-size: 14px; margin-left: 8px; opacity: 0; transform: translateX(-10px); transition: all 0.3s ease; }}
-.row-title:hover .row-chevron {{ opacity: 1; transform: translateX(0); }}
-.row-scroll-wrapper {{ position: relative; }}
-.row-cards {{ display: flex; gap: 6px; overflow-x: scroll; scroll-behavior: smooth; padding: 40px 0 200px 0; }}
-.row-cards::-webkit-scrollbar {{ display: none; }}
-.netflix-card {{ flex: 0 0 auto; position: relative; width: 220px; height: 124px; border-radius: 4px; background: #181818; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; z-index: 1; }}
-.card-thumb {{ width: 100%; height: 100%; background-image: url('https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=400&auto=format&fit=crop'); background-size: cover; border-radius: 4px; }}
-.card-label {{ position: absolute; bottom: 8px; left: 8px; color: #fff; font-size: 12px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.8); z-index: 2; transition: opacity 0.3s; }}
-.card-expand-content {{ position: absolute; top: 100%; left: 0; width: 100%; background: #181818; color: #fff; padding: 12px; border-radius: 0 0 4px 4px; opacity: 0; visibility: hidden; transition: opacity 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.8); }}
-.card-title {{ font-size: 14px; font-weight: 700; margin-bottom: 6px; }}
-.card-badges {{ display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }}
-.acc-badge {{ color: #46d369; font-weight: 700; font-size: 11px; }}
-.arch-badge {{ color: #b3b3b3; border: 1px solid #666; padding: 1px 4px; font-size: 10px; border-radius: 2px; }}
-.card-desc {{ font-size: 11px; color: #b3b3b3; line-height: 1.3; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }}
-
-.row-cards:hover .netflix-card {{ transform: translateX(-25%); }}
-.netflix-card:hover {{ transform: scale(1.4) translateX(0) !important; z-index: 10; transition-delay: 400ms; }}
-.netflix-card:hover ~ .netflix-card {{ transform: translateX(25%); }}
-.netflix-card:hover .card-expand-content {{ opacity: 1; visibility: visible; transition-delay: 400ms; }}
-.netflix-card:hover .card-label {{ opacity: 0; transition-delay: 400ms; }}
-
-.row-arrow {{ position: absolute; top: 40px; bottom: 40px; width: 40px; background: rgba(0,0,0,0.5); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; opacity: 0; transition: opacity 0.3s; z-index: 20; border: none; }}
-.row-scroll-wrapper:hover .row-arrow {{ opacity: 1; }}
-.left-arrow {{ left: 0; }}
-.right-arrow {{ right: 0; }}
-.row-arrow:hover {{ background: rgba(0,0,0,0.8); font-size: 30px; }}
-
-/* ----- PHASE 5 MODAL CSS ----- */
-#netflix-modal-backdrop {{
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.8); z-index: 99999999;
-    display: none; justify-content: center; align-items: center;
-    opacity: 0; transition: opacity 0.25s ease-out;
-}}
-#netflix-modal {{
-    width: 90%; max-width: 850px; max-height: 90vh;
-    background: #181818; border-radius: 8px;
-    overflow-y: auto; overflow-x: hidden;
-    position: relative;
-    transform: scale(0.9); transition: transform 0.25s ease-out;
-    box-shadow: 0 0 40px rgba(0,0,0,0.5);
-}}
-.modal-close-btn {{
-    position: absolute; top: 20px; right: 20px;
-    width: 36px; height: 36px; border-radius: 50%;
-    background: #181818; color: #fff; border: 2px solid #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: bold; cursor: pointer; z-index: 10;
-    transition: background 0.2s, color 0.2s;
-}}
-.modal-close-btn:hover {{ background: #fff; color: #181818; }}
-.modal-banner {{
-    width: 100%; height: 400px;
-    background-image: url('https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop');
-    background-size: cover; background-position: center;
-    position: relative;
-}}
-.modal-banner-gradient {{
-    position: absolute; bottom: 0; left: 0; width: 100%; height: 50%;
-    background: linear-gradient(to top, #181818 0%, transparent 100%);
-}}
-.modal-content-wrapper {{ padding: 0 40px 40px 40px; margin-top: -60px; position: relative; z-index: 2; }}
-.modal-title {{
-    font-family: 'Bebas Neue', cursive; font-size: 3.5rem; color: #fff;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.8); margin-bottom: 16px; line-height: 1;
-}}
-.modal-actions {{ display: flex; gap: 10px; margin-bottom: 24px; align-items: center; }}
-.modal-play-btn {{
-    background: #fff; color: #000; border: none; border-radius: 4px;
-    padding: 10px 24px; font-size: 1.2rem; font-weight: 700; cursor: pointer;
-    display: flex; align-items: center; gap: 8px; transition: background 0.2s;
-}}
-.modal-play-btn:hover {{ background: rgba(255,255,255,0.8); }}
-.modal-circle-btn {{
-    width: 40px; height: 40px; border-radius: 50%;
-    background: rgba(42,42,42,0.6); color: #fff; border: 2px solid rgba(255,255,255,0.5);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; cursor: pointer; transition: border-color 0.2s, background 0.2s;
-}}
-.modal-circle-btn:hover {{ border-color: #fff; background: rgba(255,255,255,0.1); }}
-
-.modal-body-grid {{ display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }}
-.modal-meta-row {{ display: flex; gap: 12px; margin-bottom: 12px; font-weight: 700; align-items: center; font-size: 15px; color: #fff; }}
-.modal-match {{ color: #46d369; }}
-.modal-year {{ color: #e5e5e5; font-weight: 400; }}
-.modal-hd {{ border: 1px solid rgba(255,255,255,0.4); padding: 0 4px; font-size: 12px; border-radius: 2px; color: #e5e5e5; }}
-.modal-desc {{ color: #fff; font-size: 16px; line-height: 1.5; margin-bottom: 20px; }}
-
-.modal-right-col {{ color: #b3b3b3; font-size: 14px; line-height: 1.6; }}
-.modal-right-col span {{ color: #777; }}
-.modal-right-col strong {{ color: #fff; font-weight: normal; }}
-
-/* Custom scrollbar for modal */
-#netflix-modal::-webkit-scrollbar {{ width: 8px; }}
-#netflix-modal::-webkit-scrollbar-track {{ background: transparent; }}
-#netflix-modal::-webkit-scrollbar-thumb {{ background: #333; border-radius: 4px; }}
-#netflix-modal::-webkit-scrollbar-thumb:hover {{ background: #555; }}
-</style>
-
-<div class="netflix-row-container" id="row-detector">
-    <h2 class="row-title">Choose Your Detector <span class="row-chevron">❯</span></h2>
-    <div class="row-scroll-wrapper">
-        <button class="row-arrow left-arrow" onclick="document.querySelector('.row-cards').scrollBy({{left: -600, behavior: 'smooth'}})">❮</button>
-        <div class="row-cards">
-            {_cards_html}
-        </div>
-        <button class="row-arrow right-arrow" onclick="document.querySelector('.row-cards').scrollBy({{left: 600, behavior: 'smooth'}})">❯</button>
-    </div>
-</div>
-
-<script>
-    const parentDoc = window.parent.document;
-    const modelData = {_model_data_json};
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
     
-    if (!parentDoc.getElementById('netflix-modal-backdrop')) {{
-        const backdrop = parentDoc.createElement('div'); backdrop.style.display = 'none'; backdrop.style.position = 'fixed'; backdrop.style.top = '0'; backdrop.style.left = '0'; backdrop.style.width = '100vw'; backdrop.style.height = '100vh'; backdrop.style.zIndex = '99999999'; backdrop.style.background = 'rgba(0,0,0,0.8)'; backdrop.style.justifyContent = 'center'; backdrop.style.alignItems = 'center';
-        backdrop.id = 'netflix-modal-backdrop';
-        backdrop.onclick = function() {{ window.parent.closeModal(); }};
-        backdrop.innerHTML = `
-
-            <style>
-            #netflix-modal {{
-                width: 90%; max-width: 850px; max-height: 90vh;
-                background: #181818; border-radius: 8px;
-                overflow-y: auto; overflow-x: hidden;
-                position: relative;
-                transform: scale(0.9); transition: transform 0.25s ease-out;
-                box-shadow: 0 0 40px rgba(0,0,0,0.5);
-            }}
-            .modal-close-btn {{
-                position: absolute; top: 20px; right: 20px;
-                width: 36px; height: 36px; border-radius: 50%;
-                background: #181818; color: #fff; border: 2px solid #fff;
-                display: flex; align-items: center; justify-content: center;
-                font-size: 18px; font-weight: bold; cursor: pointer; z-index: 10;
-                transition: background 0.2s, color 0.2s;
-            }}
-            .modal-close-btn:hover {{ background: #fff; color: #181818; }}
-            .modal-banner {{
-                width: 100%; height: 400px;
-                background-image: url('https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop');
-                background-size: cover; background-position: center;
-                position: relative;
-            }}
-            .modal-banner-gradient {{
-                position: absolute; bottom: 0; left: 0; width: 100%; height: 50%;
-                background: linear-gradient(to top, #181818 0%, transparent 100%);
-            }}
-            .modal-content-wrapper {{ padding: 0 40px 40px 40px; margin-top: -60px; position: relative; z-index: 2; }}
-            .modal-title {{
-                font-family: 'Bebas Neue', cursive; font-size: 3.5rem; color: #fff;
-                text-shadow: 0 2px 8px rgba(0,0,0,0.8); margin-bottom: 16px; line-height: 1;
-            }}
-            .modal-actions {{ display: flex; gap: 10px; margin-bottom: 24px; align-items: center; }}
-            .modal-play-btn {{
-                background: #fff; color: #000; border: none; border-radius: 4px;
-                padding: 10px 24px; font-size: 1.2rem; font-weight: 700; cursor: pointer;
-                display: flex; align-items: center; gap: 8px; transition: background 0.2s;
-            }}
-            .modal-play-btn:hover {{ background: rgba(255,255,255,0.8); }}
-            .modal-circle-btn {{
-                width: 40px; height: 40px; border-radius: 50%;
-                background: rgba(42,42,42,0.6); color: #fff; border: 2px solid rgba(255,255,255,0.5);
-                display: flex; align-items: center; justify-content: center;
-                font-size: 18px; cursor: pointer; transition: border-color 0.2s, background 0.2s;
-            }}
-            .modal-circle-btn:hover {{ border-color: #fff; background: rgba(255,255,255,0.1); }}
-            .modal-body-grid {{ display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }}
-            .modal-meta-row {{ display: flex; gap: 12px; margin-bottom: 12px; font-weight: 700; align-items: center; font-size: 15px; color: #fff; }}
-            .modal-match {{ color: #46d369; }}
-            .modal-year {{ color: #e5e5e5; font-weight: 400; }}
-            .modal-hd {{ border: 1px solid rgba(255,255,255,0.4); padding: 0 4px; font-size: 12px; border-radius: 2px; color: #e5e5e5; }}
-            .modal-desc {{ color: #fff; font-size: 16px; line-height: 1.5; margin-bottom: 20px; }}
-            .modal-right-col {{ color: #b3b3b3; font-size: 14px; line-height: 1.6; }}
-            .modal-right-col span {{ color: #777; }}
-            .modal-right-col strong {{ color: #fff; font-weight: normal; }}
-            </style>
-
-            <div id="netflix-modal" onclick="event.stopPropagation()">
-                <button class="modal-close-btn" onclick="closeModal()">✕</button>
-                <div class="modal-banner" id="m-banner">
-                    <div class="modal-banner-gradient"></div>
-                </div>
-                <div class="modal-content-wrapper">
-                    <div class="modal-title" id="m-title">Model Name</div>
-                    <div class="modal-actions">
-                        <button class="modal-play-btn" onclick="analyzeModel()">▶ Analyze</button>
-                        <button class="modal-circle-btn">+</button>
-                        <button class="modal-circle-btn">👍</button>
-                    </div>
-                    <div class="modal-body-grid">
-                        <div>
-                            <div class="modal-meta-row">
-                                <span class="modal-match" id="m-acc">98% Match</span>
-                                <span class="modal-year">2026</span>
-                                <span class="modal-hd">HD</span>
-                            </div>
-                            <div class="modal-desc" id="m-desc">Description goes here</div>
-                        </div>
-                        <div class="modal-right-col">
-                            <div><span>Architecture:</span> <strong id="m-arch">ViT</strong></div>
-                            <div><span>Type:</span> <strong>Classification</strong></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        parentDoc.body.appendChild(backdrop);
-        
-        window.openModal = window.parent.openModal = function(index) {{
-            const m = modelData[index];
-            parentDoc.getElementById('m-title').innerText = m.short;
-            parentDoc.getElementById('m-desc').innerText = m.desc;
-            parentDoc.getElementById('m-acc').innerText = m.acc + " Match";
-            parentDoc.getElementById('m-arch').innerText = m.arch;
-            parentDoc.getElementById('m-banner').style.backgroundImage = `url('${{m.thumb}}')`;
-            
-            const b = parentDoc.getElementById('netflix-modal-backdrop');
-            const mod = parentDoc.getElementById('netflix-modal');
-            b.style.display = 'flex';
-            void b.offsetWidth;
-            b.style.opacity = '1';
-            mod.style.transform = 'scale(1.0)';
-        }};
-        
-        window.parent.closeModal = function() {{
-            const b = parentDoc.getElementById('netflix-modal-backdrop');
-            const mod = parentDoc.getElementById('netflix-modal');
-            b.style.opacity = '0';
-            mod.style.transform = 'scale(0.9)';
-            setTimeout(() => {{ b.style.display = 'none'; }}, 250);
-        }};
-        
-        window.parent.analyzeModel = function() {{
-            window.parent.closeModal();
-            const fileInput = parentDoc.querySelector('input[type=file]');
-            if (fileInput) fileInput.click();
-        }};
+    .netflix-row-container {{ padding: 20px 4%; font-family: 'Inter', sans-serif; margin-top: 10px; }}
+    .row-title {{ color: #e5e5e5; font-size: 1.4vw; font-weight: 500; margin-bottom: 0.5vw; display: flex; align-items: center; gap: 8px; cursor: pointer; }}
+    .row-chevron {{ color: #54b9c5; font-size: 1.2vw; opacity: 0; transition: opacity 0.3s, transform 0.3s; display: inline-block; }}
+    .row-title:hover .row-chevron {{ opacity: 1; transform: translateX(5px); }}
+    
+    .row-scroll-wrapper {{ position: relative; }}
+    .row-cards {{
+        display: flex; gap: 8px; overflow-x: auto; padding: 20px 0;
+        scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth;
     }}
-</script>
-""",
-    height=450,
-)
+    .row-cards::-webkit-scrollbar {{ display: none; }}
+    
+    .row-arrow {{
+        position: absolute; top: 0; bottom: 0; width: 4%; background: rgba(0,0,0,0.5);
+        color: #fff; border: none; font-size: 2vw; cursor: pointer; z-index: 10;
+        opacity: 0; transition: opacity 0.3s, background 0.3s;
+        display: flex; align-items: center; justify-content: center;
+    }}
+    .row-scroll-wrapper:hover .row-arrow {{ opacity: 1; }}
+    .row-arrow:hover {{ background: rgba(0,0,0,0.7); font-size: 2.5vw; }}
+    .left-arrow {{ left: -4%; border-top-right-radius: 4px; border-bottom-right-radius: 4px; }}
+    .right-arrow {{ right: -4%; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }}
+    
+    .netflix-card {{
+        flex: 0 0 16.66666667%; min-width: 250px; position: relative;
+        border-radius: 4px; overflow: hidden; cursor: pointer;
+        transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.3s;
+        background: #181818;
+    }}
+    .netflix-card img {{ width: 100%; height: 140px; object-fit: cover; transition: transform 0.3s; }}
+    .netflix-card:hover {{
+        transform: scale(1.15) translateY(-10px);
+        z-index: 20;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+    }}
+    .card-info {{ padding: 12px; position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%); }}
+    .card-title {{ font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }}
+    .card-desc {{ font-size: 10px; color: #a3a3a3; line-height: 1.3; }}
+    
+    /* Modal Styles */
+    .netflix-modal-box {{
+        width: 90%; max-width: 850px; max-height: 90vh;
+        background: #181818; border-radius: 8px;
+        overflow-y: auto; overflow-x: hidden; position: relative;
+        box-shadow: 0 0 40px rgba(0,0,0,0.5); font-family: 'Inter', sans-serif;
+    }}
+    .modal-close-btn {{
+        position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 50%;
+        background: #181818; color: #fff; border: 2px solid #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px; font-weight: bold; cursor: pointer; z-index: 10;
+        transition: background 0.2s, color 0.2s;
+    }}
+    .modal-close-btn:hover {{ background: #fff; color: #181818; }}
+    .modal-banner {{ width: 100%; height: 400px; background-size: cover; background-position: center; position: relative; }}
+    .modal-banner-gradient {{ position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; background: linear-gradient(to top, #181818 0%, transparent 100%); }}
+    .modal-content-wrapper {{ padding: 0 40px 40px 40px; margin-top: -60px; position: relative; z-index: 2; }}
+    .modal-title {{ font-family: 'Bebas Neue', cursive; font-size: 3.5rem; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); margin-bottom: 16px; line-height: 1; }}
+    .modal-actions {{ display: flex; gap: 10px; margin-bottom: 24px; align-items: center; }}
+    .modal-play-btn {{ background: #fff; color: #000; border: none; border-radius: 4px; padding: 10px 24px; font-size: 1.2rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }}
+    .modal-play-btn:hover {{ background: rgba(255,255,255,0.8); }}
+    .modal-body-grid {{ display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }}
+    .modal-meta-row {{ display: flex; gap: 12px; margin-bottom: 12px; font-weight: 700; align-items: center; font-size: 15px; color: #fff; }}
+    .modal-match {{ color: #46d369; }}
+    .modal-year {{ color: #e5e5e5; font-weight: 400; }}
+    .modal-hd {{ border: 1px solid rgba(255,255,255,0.4); padding: 0 4px; font-size: 12px; border-radius: 2px; color: #e5e5e5; }}
+    .modal-desc {{ color: #fff; font-size: 16px; line-height: 1.5; margin-bottom: 20px; }}
+    .modal-right-col {{ color: #b3b3b3; font-size: 14px; line-height: 1.6; }}
+    .modal-right-col span {{ color: #777; }}
+    .modal-right-col strong {{ color: #fff; font-weight: normal; }}
+    </style>
 
-
-# ── Tabs ───────────────────────────────────────────────────────────────
-tab_image, tab_video, tab_audio, tab_url, tab_history = st.tabs(
-    ["🖼️ Image", "🎬 Video", "🎵 Audio", "🔗 URL Scanner", "📊 History"]
-)
-
-# ── Session state cleanup: clear stale analysis data between tabs ──
-_ANALYSIS_STATE_KEYS = [
-    "last_image_result",
-    "last_video_result",
-    "last_audio_result",
-    "last_url_result",
-    "img_analyze",
-    "vid_analyze",
-    "audio_analyze",
-]
-# Note: We intentionally do NOT clear model preferences, demo_mode,
-# face_crop, or scan history — those should persist across tabs.
-
-
-# ═══════════════════════════════════════════════════════════════════════
-# TAB 1: IMAGE ANALYSIS
-# ═══════════════════════════════════════════════════════════════════════
-with tab_image:
-    # Phase 3: Hero Banner
-    hero_bg_url = "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=2000&auto=format&fit=crop"
-    st.markdown(
-        f"""
-    <div class="hero-container">
-        <div class="hero-bg" style="background-image: url('{hero_bg_url}');"></div>
-        <div class="hero-gradient-bottom"></div>
-        <div class="hero-gradient-left"></div>
-        <div class="hero-gradient-top"></div>
-        <div class="hero-content">
-            <div class="hero-badge-pill">AI DETECTION</div>
-            <div class="hero-title">Verify This Media</div>
-            <div class="hero-metadata">
-                <span class="meta-match">98% Match</span>
-                <span class="meta-tag">v3.0</span>
-                <span class="meta-hd">HD</span>
+    <div class="netflix-row-container" id="row-detector">
+        <h2 class="row-title">Choose Your Detector <span class="row-chevron">></span></h2>
+        <div class="row-scroll-wrapper">
+            <button class="row-arrow left-arrow" onclick="document.querySelector('.row-cards').scrollBy({{left: -600, behavior: 'smooth'}})">&#10094;</button>
+            <div class="row-cards">
+                {_cards_html}
             </div>
-            <div class="hero-desc">Upload any image — get a verified authenticity score from 5 independent AI models in seconds.</div>
-            <div class="hero-buttons">
-                <button class="hero-btn-primary" onclick="window.parent.document.querySelector('input[type=file]').click();">▶ Analyze</button>
-                <button class="hero-btn-secondary">ℹ More Info</button>
-            </div>
+            <button class="row-arrow right-arrow" onclick="document.querySelector('.row-cards').scrollBy({{left: 600, behavior: 'smooth'}})">&#10095;</button>
         </div>
     </div>
+    {_modals_html}
     """,
-        unsafe_allow_html=True,
+    unsafe_allow_html=True,
+)
+
+
+import requests
+
+class UploadedFileMock:
+    def __init__(self, name, bytes_data):
+        self.name = name
+        self.type = "image/jpeg"
+        self.bytes_data = bytes_data
+
+    def read(self):
+        return self.bytes_data
+
+    def seek(self, arg):
+        pass
+
+st.markdown('<p class="section-label">Input Image</p>', unsafe_allow_html=True)
+
+input_method = st.radio(
+    "Method",
+    ["Upload File", "Paste URL"],
+    horizontal=True,
+    label_visibility="collapsed",
+)
+
+uploaded_file = None
+
+if input_method == "Upload File":
+    uploaded_file = st.file_uploader(
+        label="drop an image",
+        type=["jpg", "jpeg", "png", "webp"],
+        label_visibility="collapsed",
+        help="Supported formats: JPG, JPEG, PNG, WEBP",
+        key="img_uploader",
     )
-
-    import requests
-
-    class UploadedFileMock:
-        def __init__(self, name, bytes_data):
-            self.name = name
-            self.type = "image/jpeg"
-            self.bytes_data = bytes_data
-
-        def read(self):
-            return self.bytes_data
-
-        def seek(self, arg):
-            pass
-
-    st.markdown('<p class="section-label">Input Image</p>', unsafe_allow_html=True)
-
-    input_method = st.radio(
-        "Method",
-        ["Upload File", "Paste URL"],
-        horizontal=True,
+else:
+    img_url = st.text_input(
+        "Paste Image URL",
+        placeholder="https://example.com/image.jpg",
         label_visibility="collapsed",
     )
+    if img_url:
+        try:
+            with st.spinner("Fetching image..."):
+                response = requests.get(
+                    img_url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}
+                )
+                response.raise_for_status()
 
-    uploaded_file = None
+            file_name = img_url.split("/")[-1]
+            if "?" in file_name:
+                file_name = file_name.split("?")[0]
+            if not file_name or "." not in file_name:
+                file_name = "downloaded_image.jpg"
 
-    if input_method == "Upload File":
-        uploaded_file = st.file_uploader(
-            label="drop an image",
-            type=["jpg", "jpeg", "png", "webp"],
-            label_visibility="collapsed",
-            help="Supported formats: JPG, JPEG, PNG, WEBP",
-            key="img_uploader",
-        )
-    else:
-        img_url = st.text_input(
-            "Paste Image URL",
-            placeholder="https://example.com/image.jpg",
-            label_visibility="collapsed",
-        )
-        if img_url:
-            try:
-                with st.spinner("Fetching image..."):
-                    response = requests.get(
-                        img_url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}
-                    )
-                    response.raise_for_status()
+            uploaded_file = UploadedFileMock(file_name, response.content)
+        except Exception as e:
+            st.toast(f"❌ Failed to fetch image: {e}", icon="❌")
 
-                file_name = img_url.split("/")[-1]
-                if "?" in file_name:
-                    file_name = file_name.split("?")[0]
-                if not file_name or "." not in file_name:
-                    file_name = "downloaded_image.jpg"
+if uploaded_file is not None:
+    # Pass through the validation pipeline as requested
+    val_img, file_bytes, val_err = validate_image_upload(uploaded_file)
+    if val_err:
+        st.toast(f"❌ {val_err}", icon="❌")
+        st.stop()
 
-                uploaded_file = UploadedFileMock(file_name, response.content)
-            except Exception as e:
-                st.toast(f"❌ Failed to fetch image: {e}", icon="❌")
+    safe_filename = _sanitize_filename(uploaded_file.name)
 
-    if uploaded_file is not None:
-        # Pass through the validation pipeline as requested
-        val_img, file_bytes, val_err = validate_image_upload(uploaded_file)
-        if val_err:
-            st.toast(f"❌ {val_err}", icon="❌")
+    #  Layout: image preview + controls
+    preview_col, ctrl_col = st.columns([1.1, 0.9], gap="large")
+
+    with preview_col:
+        try:
+            pil_img = Image.open(io.BytesIO(file_bytes))
+            # Keep format info before converting
+            _img_format = pil_img.format
+            pil_img_with_exif = pil_img.copy()  # keep original for EXIF
+            pil_img = pil_img.convert("RGB")
+        except Exception:
+            st.toast(
+                "⚠️ The uploaded file appears to be corrupted or is not a valid image format.",
+                icon="❌",
+            )
             st.stop()
+        st.markdown('<p class="section-label">Preview</p>', unsafe_allow_html=True)
+        st.image(pil_img, use_container_width=True)
+        st.caption(
+            f"📐 {pil_img.width} × {pil_img.height} px  •  {uploaded_file.type}"
+        )
 
-        safe_filename = _sanitize_filename(uploaded_file.name)
+        # ── Digital Forensics Panel ────────────────────────────────
+        render_forensics_panel(pil_img_with_exif, file_bytes)
 
-        #  Layout: image preview + controls
-        preview_col, ctrl_col = st.columns([1.1, 0.9], gap="large")
-
-        with preview_col:
-            try:
-                pil_img = Image.open(io.BytesIO(file_bytes))
-                # Keep format info before converting
-                _img_format = pil_img.format
-                pil_img_with_exif = pil_img.copy()  # keep original for EXIF
-                pil_img = pil_img.convert("RGB")
-            except Exception:
-                st.toast(
-                    "⚠️ The uploaded file appears to be corrupted or is not a valid image format.",
-                    icon="❌",
-                )
-                st.stop()
-            st.markdown('<p class="section-label">Preview</p>', unsafe_allow_html=True)
-            st.image(pil_img, use_container_width=True)
-            st.caption(
-                f"📐 {pil_img.width} × {pil_img.height} px  •  {uploaded_file.type}"
-            )
-
-            # ── Digital Forensics Panel ────────────────────────────────
-            render_forensics_panel(pil_img_with_exif, file_bytes)
-
-            #  Web Verification Panel
-            with st.expander("🌐 Web Verification (Reverse Search)", expanded=False):
-                st.markdown(
-                    "<p style='font-size:0.85rem;color:#9ca3af;'>Search the internet for visually similar instances of this image to help corroborate its authenticity.</p>",
-                    unsafe_allow_html=True,
-                )
-                if st.button("Search Google Lens", key="btn_lens_search"):
-                    with st.spinner("Querying Google Lens..."):
-                        try:
-                            import os
-                            import tempfile
-
-                            from googlelens import GoogleLens
-
-                            with tempfile.NamedTemporaryFile(
-                                delete=False, suffix=".jpg"
-                            ) as tmp:
-                                pil_img.convert("RGB").save(tmp.name)
-                                tmp_path = tmp.name
-
-                            lens = GoogleLens()
-                            result = lens.search_by_file(tmp_path)
-
-                            if result and result.get("related_images"):
-                                st.success(
-                                    f"Found {len(result['related_images'])} visually similar matches online!"
-                                )
-                                for i, match in enumerate(result["related_images"][:3]):
-                                    st.markdown(
-                                        f"**Match {i + 1}:** [{match.get('title', 'Link')}]({match.get('url', '#')})"
-                                    )
-                            else:
-                                st.toast(
-                                    "No visually similar images found. This could mean it is entirely unique/AI-generated.",
-                                    icon="⚠️",
-                                )
-
-                            try:
-                                os.unlink(tmp_path)
-                            except:
-                                pass
-                        except Exception as e:
-                            st.toast(f"Search failed: {e}", icon="❌")
-
-        with ctrl_col:
+        #  Web Verification Panel
+        with st.expander("🌐 Web Verification (Reverse Search)", expanded=False):
             st.markdown(
-                '<p class="section-label">Analysis Controls</p>', unsafe_allow_html=True
+                "<p style='font-size:0.85rem;color:#9ca3af;'>Search the internet for visually similar instances of this image to help corroborate its authenticity.</p>",
+                unsafe_allow_html=True,
             )
+            if st.button("Search Google Lens", key="btn_lens_search"):
+                with st.spinner("Querying Google Lens..."):
+                    try:
+                        import os
+                        import tempfile
 
-            if ensemble_mode:
-                card_html = f"""
-                <div class="card">
-                    <div style='display:flex;justify-content:space-between;align-items:flex-start;'>
-                        <span style='font-size:0.75rem;color:#d1d5db;letter-spacing:0.12em;text-transform:uppercase;'>Active Mode</span>
-                        <span style='font-size:0.72rem;background:rgba(123,97,255,0.15);color:#a78bfa;
-                                     padding:0.15rem 0.6rem;border-radius:20px;border:1px solid rgba(123,97,255,0.3);'>
-                            Maximum Accuracy
-                        </span>
-                    </div>
-                    <div style='font-family:Space Mono,monospace;font-size:0.85rem;color:#a78bfa;margin:0.35rem 0 0.25rem;'>
-                        🌐 Full Ensemble
-                    </div>
-                    <div style='font-size:0.75rem;color:#9ca3af;'>
-                        🏗️ Utilizing {len(MODEL_REGISTRY)} independent models
-                    </div>
-                </div>
-                """
-            elif quad_mode:
-                card_html = """
-                <div class="card">
-                    <div style='display:flex;justify-content:space-between;align-items:flex-start;'>
-                        <span style='font-size:0.75rem;color:#d1d5db;letter-spacing:0.12em;text-transform:uppercase;'>Active Mode</span>
-                    </div>
-                    <div style='font-family:Space Mono,monospace;font-size:0.85rem;color:#a78bfa;margin:0.35rem 0 0.25rem;'>
-                        🧪 4-Model Panel
-                    </div>
-                    <div style='font-size:0.75rem;color:#9ca3af;'>
-                        🏗️ Top 4 Models side-by-side
-                    </div>
-                </div>
-                """
-            else:
-                card_html = f"""
-                <div class="card">
-                    <div style='display:flex;justify-content:space-between;align-items:flex-start;'>
-                        <span style='font-size:0.75rem;color:#d1d5db;letter-spacing:0.12em;text-transform:uppercase;'>Active Model</span>
-                        <span style='font-size:0.72rem;background:rgba(123,97,255,0.15);color:#a78bfa;
-                                     padding:0.15rem 0.6rem;border-radius:20px;border:1px solid rgba(123,97,255,0.3);'>
-                            {model_cfg.get("accuracy", "N/A")} acc
-                        </span>
-                    </div>
-                    <div style='font-family:Space Mono,monospace;font-size:0.82rem;color:#a78bfa;margin:0.35rem 0 0.25rem;word-break:break-all;'>
-                        {model_cfg["model_id"]}
-                    </div>
-                    <div style='font-size:0.75rem;color:#9ca3af;'>
-                        🏗️ {model_cfg.get("arch", "Unknown")}
-                    </div>
-                </div>
-                """
-            st.markdown(card_html, unsafe_allow_html=True)
+                        from googlelens import GoogleLens
 
-            analyze_btn = st.button(
-                "🔬 Analyze Image", use_container_width=True, key="img_analyze"
-            )
+                        with tempfile.NamedTemporaryFile(
+                            delete=False, suffix=".jpg"
+                        ) as tmp:
+                            pil_img.convert("RGB").save(tmp.name)
+                            tmp_path = tmp.name
 
-        # ── Inference ──────────────────────────────────────────────────
-        if analyze_btn:
-            if "first_run_done" not in st.session_state:
-                st.toast(
-                    "🔥 First run detected: Warming up models. This may take a few extra seconds."
-                )
-                st.session_state.first_run_done = True
+                        lens = GoogleLens()
+                        result = lens.search_by_file(tmp_path)
 
-            # -- Prepare image --
-            inference_img = pil_img.copy()
-            if use_face_crop:
-                with st.spinner("🧑 Detecting face…"):
-                    cropped = detect_and_crop_face(pil_img)
-                    if cropped is not pil_img:
-                        inference_img = cropped
-                        st.success("✅ Face detected and cropped for analysis.")
-                    else:
-                        st.info("ℹ️ No face detected — using full image.")
-
-            # ── Helper: render one model card (delegates to module-level function)
-            def render_model_result(col, model_name, results, accuracy=""):
-                render_analysis_card(col, model_name, results, accuracy)
-
-            # ── SINGLE MODEL MODE ──────────────────────────────────────
-            if not compare_mode and not quad_mode:
-                with st.spinner("⚙️ Loading model & running inference…"):
-                    t0 = time.time()
-                    pipe, pipe_err = _load_model_from_cfg(model_cfg)
-                    if pipe_err:
-                        st.toast(
-                            "❌ Could not load the selected model. Please try a different model.",
-                            icon="❌",
-                        )
-                        st.stop()
-                    results = run_inference(
-                        pipe, inference_img, model_cfg["label_fn"], top_k=2
-                    )
-                    elapsed = time.time() - t0
-
-                # ── Save to history
-                try:
-                    save_history(
-                        filename=safe_filename,
-                        pil_img=pil_img,
-                        model_name=chosen_model_name,
-                        model_id=model_cfg["model_id"],
-                        mode="single",
-                        verdict=results[0]["label"],
-                        confidence=results[0]["confidence"],
-                        elapsed=elapsed,
-                        all_results=results,
-                    )
-                except Exception:
-                    pass
-
-                top = results[0]
-                is_real = top["label"] == "REAL"
-                badge_class = "badge-real" if is_real else "badge-fake"
-                icon = "✅" if is_real else "⚠️"
-                elapsed_s = f"{elapsed:.2f}s"
-
-                st.markdown("---")
-                st.markdown(
-                    '<p class="section-label">Result</p>', unsafe_allow_html=True
-                )
-                res_left, res_right = st.columns([1, 1], gap="large")
-
-                with res_left:
-                    st.markdown(
-                        f'<div style="text-align:center;padding:1.2rem 0;">'
-                        f'<div style="font-size:2.8rem;margin-bottom:0.4rem;">{icon}</div>'
-                        f'<div class="{badge_class}">{top["label"]}</div>'
-                        f'<p style="color:#d1d5db;font-size:0.8rem;margin-top:0.8rem;">'
-                        f"Inference in {elapsed_s}</p></div>",
-                        unsafe_allow_html=True,
-                    )
-                    st.markdown(f"**Confidence — {top['confidence']}%**")
-                    st.progress(int(top["confidence"]))
-                    st.markdown(
-                        '<p class="section-label" style="margin-top:1rem;">Top-2 Predictions</p>',
-                        unsafe_allow_html=True,
-                    )
-                    for r in results:
-                        icon2 = "🟢" if r["label"] == "REAL" else "🔴"
-                        st.markdown(
-                            f'<div class="conf-row"><span>{icon2} {r["label"]} '
-                            f'<span style="font-size:0.7rem;color:#9ca3af;"> ({r["raw_label"]})</span></span>'
-                            f'<span class="conf-val">{r["confidence"]}%</span></div>',
-                            unsafe_allow_html=True,
-                        )
-
-                with res_right:
-                    fig = make_gauge(top["confidence"], top["label"], is_real)
-                    st.plotly_chart(
-                        fig, use_container_width=True, config={"displayModeBar": False}
-                    )
-
-            # ── 2-MODEL COMPARE MODE ───────────────────────────────────
-            elif compare_mode:
-                cfg_b = MODEL_REGISTRY[compare_model_name]
-                with st.spinner("⚙️ Loading both models…"):
-                    t0 = time.time()
-                    pipe_a, err_a = _load_model_from_cfg(model_cfg)
-                    pipe_b, err_b = _load_model_from_cfg(cfg_b)
-                    if err_a:
-                        st.toast(
-                            "❌ Model A failed to load. Please try a different model.",
-                            icon="❌",
-                        )
-                        st.stop()
-                    if err_b:
-                        st.toast(
-                            "❌ Model B failed to load. Please try a different model.",
-                            icon="❌",
-                        )
-                        st.stop()
-                    res_a = run_inference(
-                        pipe_a, inference_img, model_cfg["label_fn"], top_k=2
-                    )
-                    res_b = run_inference(
-                        pipe_b, inference_img, cfg_b["label_fn"], top_k=2
-                    )
-                    elapsed = time.time() - t0
-
-                # ── Save to history
-                try:
-                    save_history(
-                        filename=safe_filename,
-                        pil_img=pil_img,
-                        model_name=f"{chosen_model_name.split('—')[1].strip() if '—' in chosen_model_name else chosen_model_name} vs {compare_model_name.split('—')[1].strip() if '—' in compare_model_name else compare_model_name}",
-                        model_id=model_cfg["model_id"],
-                        mode="compare",
-                        verdict=res_a[0]["label"],
-                        confidence=res_a[0]["confidence"],
-                        elapsed=elapsed,
-                        all_results={"model_a": res_a, "model_b": res_b},
-                    )
-                except Exception:
-                    pass
-
-                st.markdown("---")
-                elapsed_str = f"{elapsed:.2f}s"
-                st.markdown(
-                    f'<p class="section-label">Comparison Results — {elapsed_str} total</p>',
-                    unsafe_allow_html=True,
-                )
-                col_a, col_b = st.columns(2, gap="large")
-                render_model_result(
-                    col_a,
-                    chosen_model_name.split("—")[1].strip(),
-                    res_a,
-                    model_cfg.get("accuracy", ""),
-                )
-                render_model_result(
-                    col_b,
-                    compare_model_name.split("—")[1].strip(),
-                    res_b,
-                    cfg_b.get("accuracy", ""),
-                )
-
-                agree = res_a[0]["label"] == res_b[0]["label"]
-                if agree:
-                    st.success(f"🤝 Both models agree: **{res_a[0]['label']}**")
-                else:
-                    st.toast(
-                        "⚡ Models disagree — consider the one with higher confidence.",
-                        icon="⚠️",
-                    )
-
-            # ── 4-MODEL PANEL MODE ─────────────────────────────────────
-            elif quad_mode:
-                panel_names = [
-                    chosen_model_name,
-                    quad_model_2,
-                    quad_model_3,
-                    quad_model_4,
-                ]
-                panel_cfgs = [MODEL_REGISTRY[n] for n in panel_names]
-
-                with st.spinner("⚙️ Loading 4 models — may take a moment on first run…"):
-                    t0 = time.time()
-                    panel_pipes = []
-                    for cfg in panel_cfgs:
-                        p, err = _load_model_from_cfg(cfg)
-                        if err:
-                            st.toast(
-                                "❌ One or more models failed to load. Please try different models.",
-                                icon="❌",
+                        if result and result.get("related_images"):
+                            st.success(
+                                f"Found {len(result['related_images'])} visually similar matches online!"
                             )
-                            st.stop()
-                        panel_pipes.append(p)
+                            for i, match in enumerate(result["related_images"][:3]):
+                                st.markdown(
+                                    f"**Match {i + 1}:** [{match.get('title', 'Link')}]({match.get('url', '#')})"
+                                )
+                        else:
+                            st.toast(
+                                "No visually similar images found. This could mean it is entirely unique/AI-generated.",
+                                icon="⚠️",
+                            )
 
-                    panel_results = [
-                        run_inference(pipe, inference_img, cfg["label_fn"], top_k=2)
-                        for pipe, cfg in zip(panel_pipes, panel_cfgs)
-                    ]
-                    elapsed = time.time() - t0
+                        try:
+                            os.unlink(tmp_path)
+                        except:
+                            pass
+                    except Exception as e:
+                        st.toast(f"Search failed: {e}", icon="❌")
 
-                # ── Save to history (verdict decided after this block)
-                _quad_save = dict(
-                    filename=safe_filename,
-                    pil_img=pil_img,
-                    model_name=" | ".join(
-                        n.split("—")[1].strip()[:12] if "—" in n else n[:12]
-                        for n in panel_names
-                    ),
-                    model_id=" | ".join(c["model_id"] for c in panel_cfgs),
-                    mode="4-panel",
-                    elapsed=elapsed,
-                    all_results=[
-                        {"model": n, "results": r}
-                        for n, r in zip(panel_names, panel_results)
-                    ],
-                )
+    with ctrl_col:
+        st.markdown(
+            '<p class="section-label">Analysis Controls</p>', unsafe_allow_html=True
+        )
 
-                # ── 2×2 model card grid ────────────────────────────────
-                st.markdown("---")
-                elapsed_str = f"{elapsed:.2f}s"
-                st.markdown(
-                    f'<p class="section-label">4-Model Panel — {elapsed_str} total</p>',
-                    unsafe_allow_html=True,
-                )
+        if ensemble_mode:
+            card_html = f"""
+            <div class="card">
+                <div style='display:flex;justify-content:space-between;align-items:flex-start;'>
+                    <span style='font-size:0.75rem;color:#d1d5db;letter-spacing:0.12em;text-transform:uppercase;'>Active Mode</span>
+                    <span style='font-size:0.72rem;background:rgba(123,97,255,0.15);color:#a78bfa;
+                                 padding:0.15rem 0.6rem;border-radius:20px;border:1px solid rgba(123,97,255,0.3);'>
+                        Maximum Accuracy
+                    </span>
+                </div>
+                <div style='font-family:Space Mono,monospace;font-size:0.85rem;color:#a78bfa;margin:0.35rem 0 0.25rem;'>
+                    🌐 Full Ensemble
+                </div>
+                <div style='font-size:0.75rem;color:#9ca3af;'>
+                    🏗️ Utilizing {len(MODEL_REGISTRY)} independent models
+                </div>
+            </div>
+            """
+        elif quad_mode:
+            card_html = """
+            <div class="card">
+                <div style='display:flex;justify-content:space-between;align-items:flex-start;'>
+                    <span style='font-size:0.75rem;color:#d1d5db;letter-spacing:0.12em;text-transform:uppercase;'>Active Mode</span>
+                </div>
+                <div style='font-family:Space Mono,monospace;font-size:0.85rem;color:#a78bfa;margin:0.35rem 0 0.25rem;'>
+                    🧪 4-Model Panel
+                </div>
+                <div style='font-size:0.75rem;color:#9ca3af;'>
+                    🏗️ Top 4 Models side-by-side
+                </div>
+            </div>
+            """
+        else:
+            card_html = f"""
+            <div class="card">
+                <div style='display:flex;justify-content:space-between;align-items:flex-start;'>
+                    <span style='font-size:0.75rem;color:#d1d5db;letter-spacing:0.12em;text-transform:uppercase;'>Active Model</span>
+                    <span style='font-size:0.72rem;background:rgba(123,97,255,0.15);color:#a78bfa;
+                                 padding:0.15rem 0.6rem;border-radius:20px;border:1px solid rgba(123,97,255,0.3);'>
+                        {model_cfg.get("accuracy", "N/A")} acc
+                    </span>
+                </div>
+                <div style='font-family:Space Mono,monospace;font-size:0.82rem;color:#a78bfa;margin:0.35rem 0 0.25rem;word-break:break-all;'>
+                    {model_cfg["model_id"]}
+                </div>
+                <div style='font-size:0.75rem;color:#9ca3af;'>
+                    🏗️ {model_cfg.get("arch", "Unknown")}
+                </div>
+            </div>
+            """
+        st.markdown(card_html, unsafe_allow_html=True)
 
-                row1 = st.columns(2, gap="large")
-                row2 = st.columns(2, gap="large")
-                all_cols = list(row1) + list(row2)
+        analyze_btn = st.button(
+            "🔬 Analyze Image", use_container_width=True, key="img_analyze"
+        )
 
-                for i, (col, name, res, cfg) in enumerate(
-                    zip(all_cols, panel_names, panel_results, panel_cfgs)
-                ):
-                    short = name.split("—")[1].strip() if "—" in name else name
-                    render_model_result(
-                        col, f"M{i + 1}: {short}", res, cfg.get("accuracy", "")
-                    )
+    # ── Inference ──────────────────────────────────────────────────
+    if analyze_btn:
+        if "first_run_done" not in st.session_state:
+            st.toast(
+                "🔥 First run detected: Warming up models. This may take a few extra seconds."
+            )
+            st.session_state.first_run_done = True
 
-                # ── OVERALL VERDICT ────────────────────────────────────
-                st.markdown("---")
-
-                tops = [r[0] for r in panel_results]
-                labels_all = [t["label"] for t in tops]
-                confs_all = [t["confidence"] for t in tops]
-
-                fake_votes = labels_all.count("FAKE")
-                real_votes = labels_all.count("REAL")
-
-                # Weighted fake confidence across all 4 models
-                weighted_fake = (
-                    sum(
-                        c if l == "FAKE" else (100.0 - c)
-                        for l, c in zip(labels_all, confs_all)
-                    )
-                    / 4.0
-                )
-
-                # Verdict: 3+ votes wins; tie → weighted conf decides
-                if fake_votes >= 3:
-                    final_v = "FAKE"
-                elif real_votes >= 3:
-                    final_v = "REAL"
+        # -- Prepare image --
+        inference_img = pil_img.copy()
+        if use_face_crop:
+            with st.spinner("🧑 Detecting face…"):
+                cropped = detect_and_crop_face(pil_img)
+                if cropped is not pil_img:
+                    inference_img = cropped
+                    st.success("✅ Face detected and cropped for analysis.")
                 else:
-                    final_v = "FAKE" if weighted_fake >= 50 else "REAL"
+                    st.info("ℹ️ No face detected — using full image.")
 
-                # ── Save to history now that verdict is known
-                try:
-                    _quad_conf = (
-                        weighted_fake if final_v == "FAKE" else (100.0 - weighted_fake)
-                    )
-                    save_history(
-                        verdict=final_v,
-                        confidence=round(_quad_conf, 2),
-                        **_quad_save,
-                    )
-                except Exception:
-                    pass
+        # ── Helper: render one model card (delegates to module-level function)
+        def render_model_result(col, model_name, results, accuracy=""):
+            render_analysis_card(col, model_name, results, accuracy)
 
-                v_real = final_v == "REAL"
-                v_color = "#34d399" if v_real else "#f87171"
-                v_bg = "rgba(52,211,153,0.08)" if v_real else "rgba(248,113,113,0.08)"
-                v_border = "#34d399" if v_real else "#f87171"
-                v_icon = "✅" if v_real else "🚨"
-                v_badge = "badge-real" if v_real else "badge-fake"
-
-                strength = (
-                    "Unanimous"
-                    if abs(fake_votes - real_votes) == 4
-                    else "Strong Consensus"
-                    if abs(fake_votes - real_votes) == 3
-                    else "Majority"
-                    if abs(fake_votes - real_votes) == 2
-                    else "Split Decision"
-                )
-                interp = (
-                    "All 4 models detect a deepfake."
-                    if fake_votes == 4
-                    else "All 4 models confirm authentic."
-                    if real_votes == 4
-                    else "3 of 4 models say FAKE — likely deepfake."
-                    if fake_votes == 3
-                    else "3 of 4 models say REAL — likely authentic."
-                    if real_votes == 3
-                    else "Models are split 2–2. Manual inspection advised."
-                )
-                vote_dots = ("🟥 " * fake_votes) + ("🟩 " * real_votes)
-                wf_str = f"{weighted_fake:.1f}%"
-
-                # Horizontal bar chart
-                short_names = [
-                    (n.split("—")[1].strip()[:20] if "—" in n else n[:20])
-                    for n in panel_names
-                ]
-                bar_colors = [
-                    "#f87171" if l == "FAKE" else "#34d399" for l in labels_all
-                ]
-                bar_labels = [f"{l}  {c:.1f}%" for l, c in zip(labels_all, confs_all)]
-
-                bar_fig = go.Figure(
-                    go.Bar(
-                        x=confs_all,
-                        y=[f"M{i + 1}: {s}" for i, s in enumerate(short_names)],
-                        orientation="h",
-                        marker_color=bar_colors,
-                        text=bar_labels,
-                        textposition="outside",
-                        textfont=dict(color="#e5e7eb", size=11, family="Space Mono"),
-                    )
-                )
-                bar_fig.update_layout(
-                    height=200,
-                    margin=dict(t=10, b=10, l=8, r=90),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    xaxis=dict(
-                        range=[0, 135],
-                        showgrid=False,
-                        zeroline=False,
-                        showticklabels=False,
-                    ),
-                    yaxis=dict(showgrid=False, tickfont=dict(color="#9ca3af", size=10)),
-                    font_color="#e5e7eb",
-                )
-
-                # Donut vote chart
-                donut_fig = go.Figure(
-                    go.Pie(
-                        labels=["FAKE", "REAL"],
-                        values=[max(fake_votes, 0.01), max(real_votes, 0.01)],
-                        hole=0.62,
-                        marker_colors=["#f87171", "#34d399"],
-                        textinfo="none",
-                    )
-                )
-                ann_color = "#f87171" if fake_votes >= real_votes else "#34d399"
-                ann_text = (
-                    f"<b>{fake_votes}/4</b><br>FAKE"
-                    if fake_votes >= real_votes
-                    else f"<b>{real_votes}/4</b><br>REAL"
-                )
-                donut_fig.update_layout(
-                    height=200,
-                    margin=dict(t=10, b=10, l=10, r=10),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    showlegend=True,
-                    legend=dict(
-                        font=dict(color="#9ca3af", size=10),
-                        orientation="h",
-                        x=0.05,
-                        y=-0.15,
-                    ),
-                    annotations=[
-                        dict(
-                            text=ann_text,
-                            x=0.5,
-                            y=0.5,
-                            font_size=13,
-                            font_color=ann_color,
-                            font_family="Space Mono",
-                            showarrow=False,
-                        )
-                    ],
-                )
-
-                vcol_main, vcol_bar, vcol_donut = st.columns(
-                    [1.2, 1.8, 1.0], gap="large"
-                )
-
-                with vcol_main:
-                    st.markdown(
-                        f"<div style='border:1px solid {v_border};border-radius:16px;"
-                        f"background:{v_bg};padding:1.4rem 1.2rem;text-align:center;"
-                        f"box-shadow:0 0 28px {v_border}33;'>"
-                        f"<div style='font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;"
-                        f"color:#d1d5db;margin-bottom:0.5rem;font-family:Space Mono,monospace;'>Overall Verdict</div>"
-                        f"<div style='font-size:2.6rem;margin-bottom:0.3rem;'>{v_icon}</div>"
-                        f"<div class='{v_badge}' style='font-size:1.3rem;'>{final_v}</div>"
-                        f"<div class='card' style='margin: 0.8rem 0; padding: 0.75rem; background: rgba(255,255,255,0.03); border-color: {v_color}40; border-left: 3px solid {v_color}; text-align: left;'>"
-                        f"<div style='font-size: 0.75rem; color: #d1d5db; line-height: 1.4;'>"
-                        f"{{generate_explanation(final_v, weighted_fake if final_v == 'FAKE' else (100.0 - weighted_fake), 'panel', 4)}}"
-                        f"</div></div>"
-                        f"<div style='margin-top:0.8rem;font-size:0.78rem;color:{v_color};"
-                        f"font-family:Space Mono,monospace;font-weight:700;'>{strength}</div>"
-                        f"<div style='font-size:0.72rem;color:#d1d5db;margin-top:0.3rem;'>"
-                        f"Weighted fake conf: {wf_str}</div>"
-                        f"<div style='margin-top:0.9rem;font-size:1.1rem;letter-spacing:0.12em;'>"
-                        f"{vote_dots}</div>"
-                        f"<div style='margin-top:0.7rem;font-size:0.72rem;color:#9ca3af;"
-                        f"line-height:1.5;padding:0 0.3rem;'>{interp}</div>"
-                        f"</div>",
-                        unsafe_allow_html=True,
-                    )
-
-                with vcol_bar:
-                    st.markdown(
-                        '<p class="section-label">Per-Model Confidence</p>',
-                        unsafe_allow_html=True,
-                    )
-                    st.plotly_chart(
-                        bar_fig,
-                        use_container_width=True,
-                        config={"displayModeBar": False},
-                    )
-
-                with vcol_donut:
-                    st.markdown(
-                        '<p class="section-label">Vote Split</p>',
-                        unsafe_allow_html=True,
-                    )
-                    st.plotly_chart(
-                        donut_fig,
-                        use_container_width=True,
-                        config={"displayModeBar": False},
-                    )
-
-            # ── FULL ENSEMBLE MODE ─────────────────────────────────────
-            elif ensemble_mode:
-                all_cfgs = list(MODEL_REGISTRY.values())
-                all_names = list(MODEL_REGISTRY.keys())
-
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-
-                ensemble_results = []
+        # ── SINGLE MODEL MODE ──────────────────────────────────────
+        if not compare_mode and not quad_mode:
+            with st.spinner("⚙️ Loading model & running inference…"):
                 t0 = time.time()
-
-                for i, (name, cfg) in enumerate(zip(all_names, all_cfgs)):
-                    short_name = name.split("—")[1].strip() if "—" in name else name
-                    status_text.text(
-                        f"⚙️ Running model {i + 1}/{len(all_names)}: {short_name}..."
+                pipe, pipe_err = _load_model_from_cfg(model_cfg)
+                if pipe_err:
+                    st.toast(
+                        "❌ Could not load the selected model. Please try a different model.",
+                        icon="❌",
                     )
-
-                    p, err = _load_model_from_cfg(cfg)
-
-                    if not err and p:
-                        res = run_inference(p, inference_img, cfg["label_fn"], top_k=2)
-                        ensemble_results.append(
-                            {
-                                "name": name,
-                                "short": short_name,
-                                "results": res,
-                                "weight": _get_model_weight(cfg.get("accuracy", "N/A")),
-                            }
-                        )
-                    else:
-                        # Fallback if model fails to load
-                        ensemble_results.append(
-                            {
-                                "name": name,
-                                "short": short_name,
-                                "results": [
-                                    {
-                                        "label": "ERROR",
-                                        "confidence": 0,
-                                        "raw_label": "error",
-                                    }
-                                ],
-                                "weight": 0,
-                            }
-                        )
-
-                    progress_bar.progress((i + 1) / len(all_names))
-
-                status_text.empty()
-                progress_bar.empty()
+                    st.stop()
+                results = run_inference(
+                    pipe, inference_img, model_cfg["label_fn"], top_k=2
+                )
                 elapsed = time.time() - t0
 
-                # ── ALGORITHM: Weighted Average ─────────────────────────
-                total_weight = sum(
-                    r["weight"] for r in ensemble_results if r["weight"] > 0
+            # ── Save to history
+            try:
+                save_history(
+                    filename=safe_filename,
+                    pil_img=pil_img,
+                    model_name=chosen_model_name,
+                    model_id=model_cfg["model_id"],
+                    mode="single",
+                    verdict=results[0]["label"],
+                    confidence=results[0]["confidence"],
+                    elapsed=elapsed,
+                    all_results=results,
                 )
-                weighted_fake_score = 0.0
+            except Exception:
+                pass
 
-                valid_models = 0
-                for r in ensemble_results:
-                    if r["weight"] > 0 and r["results"][0]["label"] != "ERROR":
-                        valid_models += 1
-                        top = r["results"][0]
-                        conf = (
-                            top["confidence"]
-                            if top["label"] == "FAKE"
-                            else (100.0 - top["confidence"])
-                        )
-                        weighted_fake_score += conf * r["weight"]
+            top = results[0]
+            is_real = top["label"] == "REAL"
+            badge_class = "badge-real" if is_real else "badge-fake"
+            icon = "✅" if is_real else "⚠️"
+            elapsed_s = f"{elapsed:.2f}s"
 
-                if total_weight > 0:
-                    weighted_fake_score /= total_weight
-                else:
-                    weighted_fake_score = 50.0
+            st.markdown("---")
+            st.markdown(
+                '<p class="section-label">Result</p>', unsafe_allow_html=True
+            )
+            res_left, res_right = st.columns([1, 1], gap="large")
 
-                final_v = "FAKE" if weighted_fake_score > 50 else "REAL"
-
-                # Save to history
-                try:
-                    _ens_conf = (
-                        weighted_fake_score
-                        if final_v == "FAKE"
-                        else (100.0 - weighted_fake_score)
-                    )
-                    save_history(
-                        filename=safe_filename,
-                        pil_img=pil_img,
-                        model_name="Full Ensemble",
-                        model_id="all",
-                        mode="ensemble",
-                        verdict=final_v,
-                        confidence=round(_ens_conf, 2),
-                        elapsed=elapsed,
-                        all_results=ensemble_results,
-                    )
-                except Exception:
-                    pass
-
-                # ── UI RENDERING ─────────────────────────────────────────
-                st.markdown("---")
-                elapsed_str = f"{elapsed:.2f}s"
+            with res_left:
                 st.markdown(
-                    f'<p class="section-label">Full Ensemble ({valid_models} Models) — {elapsed_str} total</p>',
+                    f'<div style="text-align:center;padding:1.2rem 0;">'
+                    f'<div style="font-size:2.8rem;margin-bottom:0.4rem;">{icon}</div>'
+                    f'<div class="{badge_class}">{top["label"]}</div>'
+                    f'<p style="color:#d1d5db;font-size:0.8rem;margin-top:0.8rem;">'
+                    f"Inference in {elapsed_s}</p></div>",
+                    unsafe_allow_html=True,
+                )
+                st.markdown(f"**Confidence — {top['confidence']}%**")
+                st.progress(int(top["confidence"]))
+                st.markdown(
+                    '<p class="section-label" style="margin-top:1rem;">Top-2 Predictions</p>',
+                    unsafe_allow_html=True,
+                )
+                for r in results:
+                    icon2 = "🟢" if r["label"] == "REAL" else "🔴"
+                    st.markdown(
+                        f'<div class="conf-row"><span>{icon2} {r["label"]} '
+                        f'<span style="font-size:0.7rem;color:#9ca3af;"> ({r["raw_label"]})</span></span>'
+                        f'<span class="conf-val">{r["confidence"]}%</span></div>',
+                        unsafe_allow_html=True,
+                    )
+
+            with res_right:
+                fig = make_gauge(top["confidence"], top["label"], is_real)
+                st.plotly_chart(
+                    fig, use_container_width=True, config={"displayModeBar": False}
+                )
+
+        # ── 2-MODEL COMPARE MODE ───────────────────────────────────
+        elif compare_mode:
+            cfg_b = MODEL_REGISTRY[compare_model_name]
+            with st.spinner("⚙️ Loading both models…"):
+                t0 = time.time()
+                pipe_a, err_a = _load_model_from_cfg(model_cfg)
+                pipe_b, err_b = _load_model_from_cfg(cfg_b)
+                if err_a:
+                    st.toast(
+                        "❌ Model A failed to load. Please try a different model.",
+                        icon="❌",
+                    )
+                    st.stop()
+                if err_b:
+                    st.toast(
+                        "❌ Model B failed to load. Please try a different model.",
+                        icon="❌",
+                    )
+                    st.stop()
+                res_a = run_inference(
+                    pipe_a, inference_img, model_cfg["label_fn"], top_k=2
+                )
+                res_b = run_inference(
+                    pipe_b, inference_img, cfg_b["label_fn"], top_k=2
+                )
+                elapsed = time.time() - t0
+
+            # ── Save to history
+            try:
+                save_history(
+                    filename=safe_filename,
+                    pil_img=pil_img,
+                    model_name=f"{chosen_model_name.split('—')[1].strip() if '—' in chosen_model_name else chosen_model_name} vs {compare_model_name.split('—')[1].strip() if '—' in compare_model_name else compare_model_name}",
+                    model_id=model_cfg["model_id"],
+                    mode="compare",
+                    verdict=res_a[0]["label"],
+                    confidence=res_a[0]["confidence"],
+                    elapsed=elapsed,
+                    all_results={"model_a": res_a, "model_b": res_b},
+                )
+            except Exception:
+                pass
+
+            st.markdown("---")
+            elapsed_str = f"{elapsed:.2f}s"
+            st.markdown(
+                f'<p class="section-label">Comparison Results — {elapsed_str} total</p>',
+                unsafe_allow_html=True,
+            )
+            col_a, col_b = st.columns(2, gap="large")
+            render_model_result(
+                col_a,
+                chosen_model_name.split("—")[1].strip(),
+                res_a,
+                model_cfg.get("accuracy", ""),
+            )
+            render_model_result(
+                col_b,
+                compare_model_name.split("—")[1].strip(),
+                res_b,
+                cfg_b.get("accuracy", ""),
+            )
+
+            agree = res_a[0]["label"] == res_b[0]["label"]
+            if agree:
+                st.success(f"🤝 Both models agree: **{res_a[0]['label']}**")
+            else:
+                st.toast(
+                    "⚡ Models disagree — consider the one with higher confidence.",
+                    icon="⚠️",
+                )
+
+        # ── 4-MODEL PANEL MODE ─────────────────────────────────────
+        elif quad_mode:
+            panel_names = [
+                chosen_model_name,
+                quad_model_2,
+                quad_model_3,
+                quad_model_4,
+            ]
+            panel_cfgs = [MODEL_REGISTRY[n] for n in panel_names]
+
+            with st.spinner("⚙️ Loading 4 models — may take a moment on first run…"):
+                t0 = time.time()
+                panel_pipes = []
+                for cfg in panel_cfgs:
+                    p, err = _load_model_from_cfg(cfg)
+                    if err:
+                        st.toast(
+                            "❌ One or more models failed to load. Please try different models.",
+                            icon="❌",
+                        )
+                        st.stop()
+                    panel_pipes.append(p)
+
+                panel_results = [
+                    run_inference(pipe, inference_img, cfg["label_fn"], top_k=2)
+                    for pipe, cfg in zip(panel_pipes, panel_cfgs)
+                ]
+                elapsed = time.time() - t0
+
+            # ── Save to history (verdict decided after this block)
+            _quad_save = dict(
+                filename=safe_filename,
+                pil_img=pil_img,
+                model_name=" | ".join(
+                    n.split("—")[1].strip()[:12] if "—" in n else n[:12]
+                    for n in panel_names
+                ),
+                model_id=" | ".join(c["model_id"] for c in panel_cfgs),
+                mode="4-panel",
+                elapsed=elapsed,
+                all_results=[
+                    {"model": n, "results": r}
+                    for n, r in zip(panel_names, panel_results)
+                ],
+            )
+
+            # ── 2×2 model card grid ────────────────────────────────
+            st.markdown("---")
+            elapsed_str = f"{elapsed:.2f}s"
+            st.markdown(
+                f'<p class="section-label">4-Model Panel — {elapsed_str} total</p>',
+                unsafe_allow_html=True,
+            )
+
+            row1 = st.columns(2, gap="large")
+            row2 = st.columns(2, gap="large")
+            all_cols = list(row1) + list(row2)
+
+            for i, (col, name, res, cfg) in enumerate(
+                zip(all_cols, panel_names, panel_results, panel_cfgs)
+            ):
+                short = name.split("—")[1].strip() if "—" in name else name
+                render_model_result(
+                    col, f"M{i + 1}: {short}", res, cfg.get("accuracy", "")
+                )
+
+            # ── OVERALL VERDICT ────────────────────────────────────
+            st.markdown("---")
+
+            tops = [r[0] for r in panel_results]
+            labels_all = [t["label"] for t in tops]
+            confs_all = [t["confidence"] for t in tops]
+
+            fake_votes = labels_all.count("FAKE")
+            real_votes = labels_all.count("REAL")
+
+            # Weighted fake confidence across all 4 models
+            weighted_fake = (
+                sum(
+                    c if l == "FAKE" else (100.0 - c)
+                    for l, c in zip(labels_all, confs_all)
+                )
+                / 4.0
+            )
+
+            # Verdict: 3+ votes wins; tie → weighted conf decides
+            if fake_votes >= 3:
+                final_v = "FAKE"
+            elif real_votes >= 3:
+                final_v = "REAL"
+            else:
+                final_v = "FAKE" if weighted_fake >= 50 else "REAL"
+
+            # ── Save to history now that verdict is known
+            try:
+                _quad_conf = (
+                    weighted_fake if final_v == "FAKE" else (100.0 - weighted_fake)
+                )
+                save_history(
+                    verdict=final_v,
+                    confidence=round(_quad_conf, 2),
+                    **_quad_save,
+                )
+            except Exception:
+                pass
+
+            v_real = final_v == "REAL"
+            v_color = "#34d399" if v_real else "#f87171"
+            v_bg = "rgba(52,211,153,0.08)" if v_real else "rgba(248,113,113,0.08)"
+            v_border = "#34d399" if v_real else "#f87171"
+            v_icon = "✅" if v_real else "🚨"
+            v_badge = "badge-real" if v_real else "badge-fake"
+
+            strength = (
+                "Unanimous"
+                if abs(fake_votes - real_votes) == 4
+                else "Strong Consensus"
+                if abs(fake_votes - real_votes) == 3
+                else "Majority"
+                if abs(fake_votes - real_votes) == 2
+                else "Split Decision"
+            )
+            interp = (
+                "All 4 models detect a deepfake."
+                if fake_votes == 4
+                else "All 4 models confirm authentic."
+                if real_votes == 4
+                else "3 of 4 models say FAKE — likely deepfake."
+                if fake_votes == 3
+                else "3 of 4 models say REAL — likely authentic."
+                if real_votes == 3
+                else "Models are split 2–2. Manual inspection advised."
+            )
+            vote_dots = ("🟥 " * fake_votes) + ("🟩 " * real_votes)
+            wf_str = f"{weighted_fake:.1f}%"
+
+            # Horizontal bar chart
+            short_names = [
+                (n.split("—")[1].strip()[:20] if "—" in n else n[:20])
+                for n in panel_names
+            ]
+            bar_colors = [
+                "#f87171" if l == "FAKE" else "#34d399" for l in labels_all
+            ]
+            bar_labels = [f"{l}  {c:.1f}%" for l, c in zip(labels_all, confs_all)]
+
+            bar_fig = go.Figure(
+                go.Bar(
+                    x=confs_all,
+                    y=[f"M{i + 1}: {s}" for i, s in enumerate(short_names)],
+                    orientation="h",
+                    marker_color=bar_colors,
+                    text=bar_labels,
+                    textposition="outside",
+                    textfont=dict(color="#e5e7eb", size=11, family="Space Mono"),
+                )
+            )
+            bar_fig.update_layout(
+                height=200,
+                margin=dict(t=10, b=10, l=8, r=90),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                xaxis=dict(
+                    range=[0, 135],
+                    showgrid=False,
+                    zeroline=False,
+                    showticklabels=False,
+                ),
+                yaxis=dict(showgrid=False, tickfont=dict(color="#9ca3af", size=10)),
+                font_color="#e5e7eb",
+            )
+
+            # Donut vote chart
+            donut_fig = go.Figure(
+                go.Pie(
+                    labels=["FAKE", "REAL"],
+                    values=[max(fake_votes, 0.01), max(real_votes, 0.01)],
+                    hole=0.62,
+                    marker_colors=["#f87171", "#34d399"],
+                    textinfo="none",
+                )
+            )
+            ann_color = "#f87171" if fake_votes >= real_votes else "#34d399"
+            ann_text = (
+                f"<b>{fake_votes}/4</b><br>FAKE"
+                if fake_votes >= real_votes
+                else f"<b>{real_votes}/4</b><br>REAL"
+            )
+            donut_fig.update_layout(
+                height=200,
+                margin=dict(t=10, b=10, l=10, r=10),
+                paper_bgcolor="rgba(0,0,0,0)",
+                showlegend=True,
+                legend=dict(
+                    font=dict(color="#9ca3af", size=10),
+                    orientation="h",
+                    x=0.05,
+                    y=-0.15,
+                ),
+                annotations=[
+                    dict(
+                        text=ann_text,
+                        x=0.5,
+                        y=0.5,
+                        font_size=13,
+                        font_color=ann_color,
+                        font_family="Space Mono",
+                        showarrow=False,
+                    )
+                ],
+            )
+
+            vcol_main, vcol_bar, vcol_donut = st.columns(
+                [1.2, 1.8, 1.0], gap="large"
+            )
+
+            with vcol_main:
+                st.markdown(
+                    f"<div style='border:1px solid {v_border};border-radius:16px;"
+                    f"background:{v_bg};padding:1.4rem 1.2rem;text-align:center;"
+                    f"box-shadow:0 0 28px {v_border}33;'>"
+                    f"<div style='font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;"
+                    f"color:#d1d5db;margin-bottom:0.5rem;font-family:Space Mono,monospace;'>Overall Verdict</div>"
+                    f"<div style='font-size:2.6rem;margin-bottom:0.3rem;'>{v_icon}</div>"
+                    f"<div class='{v_badge}' style='font-size:1.3rem;'>{final_v}</div>"
+                    f"<div class='card' style='margin: 0.8rem 0; padding: 0.75rem; background: rgba(255,255,255,0.03); border-color: {v_color}40; border-left: 3px solid {v_color}; text-align: left;'>"
+                    f"<div style='font-size: 0.75rem; color: #d1d5db; line-height: 1.4;'>"
+                    f"{{generate_explanation(final_v, weighted_fake if final_v == 'FAKE' else (100.0 - weighted_fake), 'panel', 4)}}"
+                    f"</div></div>"
+                    f"<div style='margin-top:0.8rem;font-size:0.78rem;color:{v_color};"
+                    f"font-family:Space Mono,monospace;font-weight:700;'>{strength}</div>"
+                    f"<div style='font-size:0.72rem;color:#d1d5db;margin-top:0.3rem;'>"
+                    f"Weighted fake conf: {wf_str}</div>"
+                    f"<div style='margin-top:0.9rem;font-size:1.1rem;letter-spacing:0.12em;'>"
+                    f"{vote_dots}</div>"
+                    f"<div style='margin-top:0.7rem;font-size:0.72rem;color:#9ca3af;"
+                    f"line-height:1.5;padding:0 0.3rem;'>{interp}</div>"
+                    f"</div>",
                     unsafe_allow_html=True,
                 )
 
-                v_real = final_v == "REAL"
-                v_color = "#34d399" if v_real else "#f87171"
-                v_bg = "rgba(52,211,153,0.08)" if v_real else "rgba(248,113,113,0.08)"
-                v_border = "#34d399" if v_real else "#f87171"
-                v_icon = "✅" if v_real else "🚨"
-                v_badge = "badge-real" if v_real else "badge-fake"
+            with vcol_bar:
+                st.markdown(
+                    '<p class="section-label">Per-Model Confidence</p>',
+                    unsafe_allow_html=True,
+                )
+                st.plotly_chart(
+                    bar_fig,
+                    use_container_width=True,
+                    config={"displayModeBar": False},
+                )
 
+            with vcol_donut:
+                st.markdown(
+                    '<p class="section-label">Vote Split</p>',
+                    unsafe_allow_html=True,
+                )
+                st.plotly_chart(
+                    donut_fig,
+                    use_container_width=True,
+                    config={"displayModeBar": False},
+                )
+
+        # ── FULL ENSEMBLE MODE ─────────────────────────────────────
+        elif ensemble_mode:
+            all_cfgs = list(MODEL_REGISTRY.values())
+            all_names = list(MODEL_REGISTRY.keys())
+
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+
+            ensemble_results = []
+            t0 = time.time()
+
+            for i, (name, cfg) in enumerate(zip(all_names, all_cfgs)):
+                short_name = name.split("—")[1].strip() if "—" in name else name
+                status_text.text(
+                    f"⚙️ Running model {i + 1}/{len(all_names)}: {short_name}..."
+                )
+
+                p, err = _load_model_from_cfg(cfg)
+
+                if not err and p:
+                    res = run_inference(p, inference_img, cfg["label_fn"], top_k=2)
+                    ensemble_results.append(
+                        {
+                            "name": name,
+                            "short": short_name,
+                            "results": res,
+                            "weight": _get_model_weight(cfg.get("accuracy", "N/A")),
+                        }
+                    )
+                else:
+                    # Fallback if model fails to load
+                    ensemble_results.append(
+                        {
+                            "name": name,
+                            "short": short_name,
+                            "results": [
+                                {
+                                    "label": "ERROR",
+                                    "confidence": 0,
+                                    "raw_label": "error",
+                                }
+                            ],
+                            "weight": 0,
+                        }
+                    )
+
+                progress_bar.progress((i + 1) / len(all_names))
+
+            status_text.empty()
+            progress_bar.empty()
+            elapsed = time.time() - t0
+
+            # ── ALGORITHM: Weighted Average ─────────────────────────
+            total_weight = sum(
+                r["weight"] for r in ensemble_results if r["weight"] > 0
+            )
+            weighted_fake_score = 0.0
+
+            valid_models = 0
+            for r in ensemble_results:
+                if r["weight"] > 0 and r["results"][0]["label"] != "ERROR":
+                    valid_models += 1
+                    top = r["results"][0]
+                    conf = (
+                        top["confidence"]
+                        if top["label"] == "FAKE"
+                        else (100.0 - top["confidence"])
+                    )
+                    weighted_fake_score += conf * r["weight"]
+
+            if total_weight > 0:
+                weighted_fake_score /= total_weight
+            else:
+                weighted_fake_score = 50.0
+
+            final_v = "FAKE" if weighted_fake_score > 50 else "REAL"
+
+            # Save to history
+            try:
                 _ens_conf = (
                     weighted_fake_score
                     if final_v == "FAKE"
                     else (100.0 - weighted_fake_score)
                 )
+                save_history(
+                    filename=safe_filename,
+                    pil_img=pil_img,
+                    model_name="Full Ensemble",
+                    model_id="all",
+                    mode="ensemble",
+                    verdict=final_v,
+                    confidence=round(_ens_conf, 2),
+                    elapsed=elapsed,
+                    all_results=ensemble_results,
+                )
+            except Exception:
+                pass
 
-                # Hero Block
-                st.markdown(
-                    f"<div style='border:1px solid {v_border};border-radius:16px;"
-                    f"background:{v_bg};padding:2.5rem 2rem;text-align:center;"
-                    f"box-shadow:0 0 40px {v_border}33; margin-bottom: 2rem;'>"
-                    f"<div style='font-size:0.8rem;letter-spacing:0.2em;text-transform:uppercase;"
-                    f"color:#d1d5db;margin-bottom:1rem;font-family:Space Mono,monospace;'>Weighted Consensus Verdict</div>"
-                    f"<div style='font-size:4rem;margin-bottom:0.5rem;'>{v_icon}</div>"
-                    f"<div class='{v_badge}' style='font-size:2rem; padding: 0.5rem 2rem;'>{final_v}</div>"
-                    f"<div class='card' style='margin: 1.5rem 0 0.5rem 0; padding: 1rem; background: rgba(255,255,255,0.03); border-color: {v_color}40; border-left: 4px solid {v_color}; text-align: left;'>"
-                    f"<div style='font-size: 0.85rem; color: #d1d5db; line-height: 1.5;'>"
-                    f"{{generate_explanation(final_v, _ens_conf, 'ensemble', valid_models)}}"
-                    f"</div></div>"
-                    f"<div style='margin-top:1.5rem;font-size:1.1rem;color:{v_color};"
-                    f"font-family:Space Mono,monospace;font-weight:700;'>{_ens_conf:.1f}% Aggregate Confidence</div>"
-                    f"<div style='font-size:0.85rem;color:#9ca3af;margin-top:0.5rem;'>"
-                    f"Calculated from {valid_models} models using weighted average algorithm.</div>"
-                    f"</div>",
-                    unsafe_allow_html=True,
+            # ── UI RENDERING ─────────────────────────────────────────
+            st.markdown("---")
+            elapsed_str = f"{elapsed:.2f}s"
+            st.markdown(
+                f'<p class="section-label">Full Ensemble ({valid_models} Models) — {elapsed_str} total</p>',
+                unsafe_allow_html=True,
+            )
+
+            v_real = final_v == "REAL"
+            v_color = "#34d399" if v_real else "#f87171"
+            v_bg = "rgba(52,211,153,0.08)" if v_real else "rgba(248,113,113,0.08)"
+            v_border = "#34d399" if v_real else "#f87171"
+            v_icon = "✅" if v_real else "🚨"
+            v_badge = "badge-real" if v_real else "badge-fake"
+
+            _ens_conf = (
+                weighted_fake_score
+                if final_v == "FAKE"
+                else (100.0 - weighted_fake_score)
+            )
+
+            # Hero Block
+            st.markdown(
+                f"<div style='border:1px solid {v_border};border-radius:16px;"
+                f"background:{v_bg};padding:2.5rem 2rem;text-align:center;"
+                f"box-shadow:0 0 40px {v_border}33; margin-bottom: 2rem;'>"
+                f"<div style='font-size:0.8rem;letter-spacing:0.2em;text-transform:uppercase;"
+                f"color:#d1d5db;margin-bottom:1rem;font-family:Space Mono,monospace;'>Weighted Consensus Verdict</div>"
+                f"<div style='font-size:4rem;margin-bottom:0.5rem;'>{v_icon}</div>"
+                f"<div class='{v_badge}' style='font-size:2rem; padding: 0.5rem 2rem;'>{final_v}</div>"
+                f"<div class='card' style='margin: 1.5rem 0 0.5rem 0; padding: 1rem; background: rgba(255,255,255,0.03); border-color: {v_color}40; border-left: 4px solid {v_color}; text-align: left;'>"
+                f"<div style='font-size: 0.85rem; color: #d1d5db; line-height: 1.5;'>"
+                f"{{generate_explanation(final_v, _ens_conf, 'ensemble', valid_models)}}"
+                f"</div></div>"
+                f"<div style='margin-top:1.5rem;font-size:1.1rem;color:{v_color};"
+                f"font-family:Space Mono,monospace;font-weight:700;'>{_ens_conf:.1f}% Aggregate Confidence</div>"
+                f"<div style='font-size:0.85rem;color:#9ca3af;margin-top:0.5rem;'>"
+                f"Calculated from {valid_models} models using weighted average algorithm.</div>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+
+            # Grid of individual models
+            st.markdown(
+                '<p class="section-label">Individual Model Breakdown</p>',
+                unsafe_allow_html=True,
+            )
+
+            # Build HTML for grid
+            grid_html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">'
+
+            for r in ensemble_results:
+                if r["results"][0]["label"] == "ERROR":
+                    continue
+
+                top = r["results"][0]
+                is_real = top["label"] == "REAL"
+                m_color = "#34d399" if is_real else "#f87171"
+                m_bg = (
+                    "rgba(52,211,153,0.05)" if is_real else "rgba(248,113,113,0.05)"
                 )
 
-                # Grid of individual models
-                st.markdown(
-                    '<p class="section-label">Individual Model Breakdown</p>',
-                    unsafe_allow_html=True,
-                )
-
-                # Build HTML for grid
-                grid_html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">'
-
-                for r in ensemble_results:
-                    if r["results"][0]["label"] == "ERROR":
-                        continue
-
-                    top = r["results"][0]
-                    is_real = top["label"] == "REAL"
-                    m_color = "#34d399" if is_real else "#f87171"
-                    m_bg = (
-                        "rgba(52,211,153,0.05)" if is_real else "rgba(248,113,113,0.05)"
-                    )
-
-                    grid_html += f"""
-                    <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; background: #18181b;">
-                        <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{r["short"]}</div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <span style="font-weight: bold; color: {m_color};">{top["label"]}</span>
-                            <span style="font-family: Space Mono; color: #d1d5db; font-size: 0.9rem;">{top["confidence"]}%</span>
-                        </div>
-                        <div style="font-size: 0.65rem; color: #d1d5db; display: flex; justify-content: space-between;">
-                            <span>Weight: {r["weight"]:.2f}</span>
-                        </div>
-                        <div style="width: 100%; height: 4px; background: #9ca3af; border-radius: 2px; margin-top: 0.4rem; overflow: hidden;">
-                            <div style="width: {top["confidence"]}%; height: 100%; background: {m_color};"></div>
-                        </div>
+                grid_html += f"""
+                <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; background: #18181b;">
+                    <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{r["short"]}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <span style="font-weight: bold; color: {m_color};">{top["label"]}</span>
+                        <span style="font-family: Space Mono; color: #d1d5db; font-size: 0.9rem;">{top["confidence"]}%</span>
                     </div>
-                    """
+                    <div style="font-size: 0.65rem; color: #d1d5db; display: flex; justify-content: space-between;">
+                        <span>Weight: {r["weight"]:.2f}</span>
+                    </div>
+                    <div style="width: 100%; height: 4px; background: #9ca3af; border-radius: 2px; margin-top: 0.4rem; overflow: hidden;">
+                        <div style="width: {top["confidence"]}%; height: 100%; background: {m_color};"></div>
+                    </div>
+                </div>
+                """
 
-                grid_html += "</div>"
-                st.markdown(grid_html, unsafe_allow_html=True)
+            grid_html += "</div>"
+            st.markdown(grid_html, unsafe_allow_html=True)
 
-    else:
-        # ── Empty state ────────────────────────────────────────────────
-        st.markdown(
-            """
-        <div style='text-align:center;padding:4rem 1rem;'>
-            <div style='font-size:4rem;margin-bottom:1rem;'>📁</div>
-            <p style='color:#9ca3af;font-size:1rem;'>
-                Upload an image using the uploader above to begin analysis.
-            </p>
-            <p style='color:#d1d5db;font-size:0.82rem;'>
-                Supported: JPG · JPEG · PNG · WEBP
-            </p>
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
+else:
+    # ── Empty state ────────────────────────────────────────────────
+    st.markdown(
+        """
+    <div style='text-align:center;padding:4rem 1rem;'>
+        <div style='font-size:4rem;margin-bottom:1rem;'>📁</div>
+        <p style='color:#9ca3af;font-size:1rem;'>
+            Upload an image using the uploader above to begin analysis.
+        </p>
+        <p style='color:#d1d5db;font-size:0.82rem;'>
+            Supported: JPG · JPEG · PNG · WEBP
+        </p>
+    </div>
+    """,
+        unsafe_allow_html=True,
+    )
 
 # ═══════════════════════════════════════════════════════════════════════
+
 # TAB 2: VIDEO ANALYSIS
 # ═══════════════════════════════════════════════════════════════════════
 with tab_video:
