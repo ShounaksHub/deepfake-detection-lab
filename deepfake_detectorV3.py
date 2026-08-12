@@ -688,13 +688,25 @@ else:
 .nav-left{display:flex;align-items:center;gap:40px;}
 .nav-logo{color:#e50914;font-size:1.8rem;font-weight:bold;font-family:'Bebas Neue',sans-serif;cursor:pointer;pointer-events:auto;}
 .nav-logo .red-letter{color:#e50914;}
+.nav-links{display:flex;list-style:none;gap:20px;margin:0;padding:0;pointer-events:auto;}
+.nav-links li{color:#e5e5e5;font-size:14px;cursor:pointer;transition:color 0.3s;}
+.nav-links li:hover{color:#b3b3b3;}
 .nav-right{display:flex;align-items:center;gap:20px;pointer-events:auto;}
 .nav-icon{width:24px;height:24px;fill:#fff;cursor:pointer;}
 .profile-avatar{width:32px;height:32px;background:#e50914;border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;cursor:pointer;}
 </style>
 <div class="zoom-container"><div class="zoom-logo">MULTIMEDIA AUTHENTICITY LAB</div></div>
 <div id="css-netflix-nav">
-<div class="nav-left"><div class="nav-logo"><span class="red-letter">D</span>EEPFAKE</div></div>
+<div class="nav-left">
+    <div class="nav-logo"><span class="red-letter">D</span>EEPFAKE</div>
+    <ul class="nav-links">
+        <li>Home</li>
+        <li>Detectors</li>
+        <li>Images</li>
+        <li>Videos</li>
+        <li>My List</li>
+    </ul>
+</div>
 <div class="nav-right">
 <svg class="nav-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
 <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
@@ -4401,10 +4413,11 @@ st.markdown("---")
 st.markdown(
     """
 <style>
-/* Hide default Streamlit footer and main menu */
+/* Hide default Streamlit footer, header, and main menu */
 footer {visibility: hidden;}
 #MainMenu {visibility: hidden;}
-/* header {visibility: hidden;} */
+header {visibility: hidden;}
+[data-testid="stHeader"] {display: none;}
 </style>
 
 <div style='text-align:center;padding:1.5rem 0 0.5rem;'>
