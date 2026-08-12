@@ -2635,7 +2635,7 @@ for idx, (name, cfg) in enumerate(MODEL_REGISTRY.items()):
     acc = cfg.get("accuracy", "90%")
     arch = cfg.get("arch", "Unknown")
     
-    _cards_html += textwrap.dedent(f"""
+    _cards_html += f"""
         <div class="netflix-card" onclick="document.getElementById('modal-{m_id}').style.display='flex';">
             <img src="{bg_img}" alt="{short}">
             <div class="card-info">
@@ -2643,8 +2643,8 @@ for idx, (name, cfg) in enumerate(MODEL_REGISTRY.items()):
                 <div class="card-desc">{desc[:90]}...</div>
             </div>
         </div>
-    """)
-    _modals_html += textwrap.dedent(f"""
+    """
+    _modals_html += f"""
     <div id="modal-{m_id}" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999999; background:rgba(0,0,0,0.8); justify-content:center; align-items:center;" onclick="this.style.display='none';">
         <div class="netflix-modal-box" onclick="event.stopPropagation();">
             <button class="modal-close-btn" onclick="document.getElementById('modal-{m_id}').style.display='none';">X</button>
@@ -2674,10 +2674,9 @@ for idx, (name, cfg) in enumerate(MODEL_REGISTRY.items()):
             </div>
         </div>
     </div>
-    """)
+    """
 
-st.markdown(
-    textwrap.dedent(f"""
+html_str = f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
     
@@ -2764,9 +2763,10 @@ st.markdown(
         </div>
     </div>
     {_modals_html}
-    """),
-    unsafe_allow_html=True,
-)
+    """
+html_str = "\n".join(line.lstrip() for line in html_str.splitlines())
+st.markdown(html_str, unsafe_allow_html=True)
+
 
 
 tab_image, tab_video, tab_audio, tab_url, tab_history = st.tabs(
